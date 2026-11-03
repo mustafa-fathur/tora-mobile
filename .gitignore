@@ -39,3 +39,13 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Android Studio / IntelliJ settings
+.idea/
+
+# local env (keep .env.example)
+.env
+
+# built app files (they embed the Supabase URL; keep them on Google Drive, not in git)
+*.apk
+*.aab
