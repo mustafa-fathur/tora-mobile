@@ -20,13 +20,17 @@
   - `describeRow`, the web's titles and subtitles
   - `formFromTransaction`, which fills the edit form. Amounts show as `1.600.000`.
   - `transferLegs`
-- Checks: typecheck, lint, 73 tests and the Android bundle all pass. Browser end-to-end check with a fake Supabase:
+- Checks: typecheck, lint, 75 tests and the Android bundle all pass. Browser end-to-end check with a fake Supabase:
   - The list, search, account filter and month switch work.
   - Editing an expense updates the row by `id`.
   - Editing a transfer updates both rows and keeps each side's description.
   - After saving, the transactions and accounts data reload.
   - Opening `/add?id=` directly fetches the row and its other side.
   - Delete wasn't testable there: the confirm dialog is phone-only.
+
+### Fixed after review
+- **Crash when switching Expense / Income / Transfer** ("Couldn't find a LinkingContext context"). The selected segment got `shadow-sm` only when selected. In NativeWind v4, a class that sets CSS variables (all `shadow-*`, `ring-*`, transforms…) or animations must be on a component from its first render. Adding it later triggers a development warning that crashes while printing. The switch now marks the selected segment with a border and background only.
+- **Rule**: classes added conditionally must be plain styles. `tests/unit/conditional-classes.test.ts` enforces it. It compiles every conditionally added class in `src/` with our Tailwind setup and fails on any that sets CSS variables, animations, transitions or containers. Browser previews don't show this bug, so the test is the safety net.
 
 ### Decisions
 - Tapping a balance update offers delete only (same as the web).
