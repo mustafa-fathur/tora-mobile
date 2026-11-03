@@ -1,24 +1,21 @@
-import { router } from 'expo-router';
 import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, RefreshControl, ScrollView, SectionList, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, SectionList, View } from 'react-native';
 
 import { Chip } from '@/components/add/chip';
 import { Loading, LoadError } from '@/components/screen-state';
+import { openTransaction } from '@/components/transactions/open-transaction';
 import { TransactionRow } from '@/components/transactions/transaction-row';
 import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { useCachedData } from '@/lib/data/cache';
-import { handOff } from '@/lib/data/edit-store';
 import { DATA } from '@/lib/data/keys';
 import { getTransactions } from '@/lib/data/queries';
-import { deleteTransaction } from '@/lib/data/transactions';
 import { makeContext, totals } from '@/lib/finance/cashflow';
 import { formatDay, formatMonth, monthRange, shiftMonth } from '@/lib/finance/dates';
 import { jakartaNow } from '@/lib/finance/now';
 import { dayGroups, describeRow } from '@/lib/finance/transaction-list';
-import type { Transaction } from '@/lib/finance/types';
 import { formatMoney } from '@/lib/money';
 import { COLORS } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -133,14 +130,6 @@ export default function TransactionsScreen() {
   const accountById = new Map(accounts.data!.map((a) => [a.id, a]));
   const categoryById = new Map(categories.data!.map((c) => [c.id, c]));
 
-  function open(t: Transaction) {
-    if (t.kind === 'adjustment') return confirmDeleteAdjustment(t);
-    const partner = t.transfer_id ? rows.find((r) => r.transfer_id === t.transfer_id && r.id !== t.id) : undefined;
-    // Without the other leg in this list (account filter), the sheet fetches it.
-    if (t.kind === 'regular' || partner) handOff(t, partner);
-    router.push({ pathname: '/add', params: { id: t.id } });
-  }
-
   return (
     <View className="flex-1 bg-background">
       {filters}
@@ -181,7 +170,7 @@ export default function TransactionsScreen() {
               transaction={item}
               look={describeRow(item, accountById, categoryById)}
               currency={accountById.get(item.account_id)?.currency ?? 'IDR'}
-              onPress={() => open(item)}
+              onPress={() => openTransaction(item, rows)}
             />
           </View>
         )}
@@ -217,24 +206,5 @@ function Total({ label, value, signed = false }: { label: string; value: number;
         {formatMoney(value, 'IDR', signed ? { signed: true } : undefined)}
       </Text>
     </View>
-  );
-}
-
-// Balance updates can't be edited (same as the web); tapping one offers to delete it.
-function confirmDeleteAdjustment(t: Transaction) {
-  Alert.alert(
-    'Delete this balance update?',
-    'Balance updates can’t be edited. Delete it and update the balance again from Accounts on the web if needed.',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          const message = await deleteTransaction(t);
-          if (message) Alert.alert('Not deleted', message);
-        },
-      },
-    ],
   );
 }
