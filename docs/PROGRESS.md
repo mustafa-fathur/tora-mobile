@@ -1,5 +1,51 @@
 # Progress
 
+## Session 3 (2026-11-03): Transactions tab, edit and delete
+
+### Done
+- **Copied from the web** (`dea6031`): `finance/calendar.ts` (for `dailyTotals`) and `finance/recurring.ts` (needed by calendar; also used later for Home's bills), with their tests.
+- **Transactions tab**:
+  - Month switcher (◀ November 2026 ▶).
+  - Search on description and notes, with a short pause before searching, the same database search as the web.
+  - Account filter chips.
+  - Income / spending / net for the rows shown.
+  - Rows grouped by day, with each day's net in IDR. These are the web's rules: transfers and balance updates don't count, refunds lower spending, other currencies convert with rates.
+  - Pull to refresh.
+  - Empty states, plus a note if a month has over 1000 rows (the web's limit too).
+- **Edit**: tapping a row opens the same sheet as Add (`/add?id=…`), titled "Edit transaction". Like the web, a transfer can't switch to expense/income or back. Editing a transfer updates both sides. The row is handed over from the list, so the sheet opens instantly; a direct link fetches it.
+- **Delete**: "Delete transaction" in the edit sheet, with the phone's own confirm dialog. A transfer deletes both rows (by `transfer_id`). Balance updates are delete-only: tapping one asks to delete it (the web's wording).
+- **Fresh data everywhere**: `invalidate('transactions', 'accounts', 'home')` after every add, edit and delete. Every screen showing those keys reloads, including tabs not in view. Screens also reload when they come back into view. Home is still a placeholder; it should use a `home…` cache key so it refreshes too.
+- Pure helpers with tests in `lib/finance/transaction-list.ts`:
+  - `dayGroups`
+  - `describeRow`, the web's titles and subtitles
+  - `formFromTransaction`, which fills the edit form. Amounts show as `1.600.000`.
+  - `transferLegs`
+- Checks: typecheck, lint, 75 tests and the Android bundle all pass. Browser end-to-end check with a fake Supabase:
+  - The list, search, account filter and month switch work.
+  - Editing an expense updates the row by `id`.
+  - Editing a transfer updates both rows and keeps each side's description.
+  - After saving, the transactions and accounts data reload.
+  - Opening `/add?id=` directly fetches the row and its other side.
+  - Delete wasn't testable there: the confirm dialog is phone-only.
+
+### Fixed after review
+- **Crash when switching Expense / Income / Transfer** ("Couldn't find a LinkingContext context"). The selected segment got `shadow-sm` only when selected. In NativeWind v4, a class that sets CSS variables (all `shadow-*`, `ring-*`, transforms…) or animations must be on a component from its first render. Adding it later triggers a development warning that crashes while printing. The switch now marks the selected segment with a border and background only.
+- **Rule**: classes added conditionally must be plain styles. `tests/unit/conditional-classes.test.ts` enforces it. It compiles every conditionally added class in `src/` with our Tailwind setup and fails on any that sets CSS variables, animations, transitions or containers. Browser previews don't show this bug, so the test is the safety net.
+
+### Decisions
+- Tapping a balance update offers delete only (same as the web).
+- Transfer descriptions: when both sides still have the automatic text ("Transfer to X" / "Transfer from Y"), the edit form shows an empty description, so saving rewrites each side correctly. **The web's edit form copies the "Transfer to X" text onto both sides when saving; worth fixing there.**
+- Editing a transfer is two updates in a row, like the web (no database transaction). If the second fails, the error shows and the list reloads.
+
+### Next
+1. Owner: phone checklist from this session's PR.
+2. Home: month totals, top budgets (port `budgets.ts`), bills due in 7 days (`recurring.ts` is ready), last 5 transactions. Use cache keys starting with `home` so it refreshes after changes.
+3. App icon and splash with the Tora logo.
+
+### Open questions
+- Fix the web's transfer edit description bug (see Decisions)?
+- Hermes number formatting, "Open Tora on the web" target, and font: still open from sessions 1–2.
+
 ## Session 2 (2026-11-03): helpers, Add transaction, Accounts
 
 ### Done
