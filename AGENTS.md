@@ -81,6 +81,7 @@ Bottom tabs with a center **+** button:
 - The owner is new to React Native: explain native concepts briefly when they come up.
 - Cloud sessions can't run an emulator. Before finishing a task: `npx tsc --noEmit`, `npx expo lint`, and unit tests pass; say what the owner should check on the device.
 - Add packages with `npx expo install`. Prefer what runs in **Expo Go** during development.
+- **NativeWind: never add `shadow-*`, `ring-*`, transform, animation (`animate-*`), transition or container classes conditionally** (`selected && 'shadow-sm'`, ternaries, or toggled variants). These set CSS variables or animations, and NativeWind v4 can't add them after a component's first render: in development it crashes with "Couldn't find a LinkingContext context". Show state with plain styles (background, border, text colour, opacity) instead, or put the class on the component from its first render. `tests/unit/conditional-classes.test.ts` enforces this. Browser previews don't show this crash, so trust the test.
 - **Release = an APK** the owner sideloads from Google Drive (no Play Store). Build locally (`npx expo prebuild` + Gradle, or `npx expo run:android --variant release`) or with EAS. Signing keys (`*.jks`) are never committed.
 - Never commit real deployment identifiers (production domain, Supabase project ref), real financial data, or screenshots of other products.
 - Commits: small and meaningful. Keep `docs/PROGRESS.md` (create it) updated at the end of each session: done, next, open questions.
