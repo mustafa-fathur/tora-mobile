@@ -1,7 +1,7 @@
 // Reads from Supabase. Ported from tora web: src/lib/data/queries.ts @ dea6031
 // (getAccounts, getCategories, getRateMap). RLS limits every query to the signed-in user.
 import type { Rates } from '@/lib/finance/fx';
-import type { Account, Category } from '@/lib/finance/types';
+import type { Account, Category, Transaction } from '@/lib/finance/types';
 import { supabase } from '@/lib/supabase/client';
 
 /** Accounts with their current balance and their type's name and class, in display order. */
@@ -35,4 +35,45 @@ export async function getRates(): Promise<Rates> {
   const { data, error } = await supabase.from('exchange_rates').select('currency, rate');
   if (error) throw error;
   return Object.fromEntries(data.map((r) => [r.currency, Number(r.rate)]));
+}
+
+export type TransactionFilters = {
+  start: string;
+  end: string; // exclusive
+  accountId?: string;
+  q?: string; // matches description or notes
+};
+
+/** Transactions matching the filters, newest first (at most 1000, like the web). */
+export async function getTransactions(f: TransactionFilters): Promise<Transaction[]> {
+  let query = supabase
+    .from('transactions')
+    .select('*')
+    .gte('date', f.start)
+    .lt('date', f.end)
+    .order('date', { ascending: false })
+    .order('time', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false });
+  if (f.accountId) query = query.eq('account_id', f.accountId);
+  if (f.q) {
+    const term = f.q.replace(/[%_,()]/g, ' ').trim();
+    if (term) query = query.or(`description.ilike.%${term}%,notes.ilike.%${term}%`);
+  }
+  const { data, error } = await query.limit(1000);
+  if (error) throw error;
+  return data;
+}
+
+/** One transaction plus, for a transfer, its other leg. */
+export async function getTransactionWithPartner(id: string): Promise<{ row: Transaction; partner?: Transaction } | null> {
+  const { data: row, error } = await supabase.from('transactions').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  if (!row) return null;
+  if (!row.transfer_id) return { row };
+  const { data: legs, error: legsError } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('transfer_id', row.transfer_id);
+  if (legsError) throw legsError;
+  return { row, partner: legs.find((l) => l.id !== row.id) };
 }
