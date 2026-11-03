@@ -33,8 +33,10 @@ export function ModeSwitch({
             accessibilityRole="radio"
             accessibilityState={{ checked: selected, disabled: locked }}
             className={cn(
-              'h-9 flex-1 items-center justify-center rounded-md',
-              selected && 'bg-background shadow-sm shadow-black/10',
+              // No shadow on the selected segment: NativeWind can't add shadow-* (or any class
+              // that sets CSS variables) after the first render; it crashes in development.
+              'h-9 flex-1 items-center justify-center rounded-md border',
+              selected ? 'border-border bg-background' : 'border-transparent',
               locked && 'opacity-40',
             )}>
             <Text className={cn('text-sm font-medium', selected ? 'text-foreground' : 'text-muted-foreground')}>
