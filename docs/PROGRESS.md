@@ -1,5 +1,38 @@
 # Progress
 
+## Session 2 (2026-11-03): helpers, Add transaction, Accounts
+
+### Done
+- **Helpers copied from the web** (header shows web commit `dea6031`): `src/lib/money.ts`, `src/lib/finance/{dates,fx,cashflow,types,accounts,form}.ts`, plus `toCategoryGroups` (`finance/categories.ts`). Their tests are in `tests/unit/` (`money`, `dates`, and the fx + cash flow parts of `finance`).
+- **Test runner: Vitest**, same as the web, so copied tests run unchanged. `npm test` (56 tests). Tests run in Node, so tested files must not import React Native.
+- **Mobile-only helpers, with tests:**
+  - `lib/amount-input.ts`: `parseAmountInput` adds the shorthand `45rb`, `45k`, `1,5jt`, `1.5 juta` on top of the web's `parseAmount` (which doesn't read suffixes).
+  - `lib/finance/transaction-rows.ts`: the web's `saveTransaction` rules (add path) as a pure function: signed amounts, refunds, category kind check, transfers as two rows sharing `transfer_id`, amount received for transfers between currencies, same error messages.
+  - `lib/finance/now.ts`: today/now in Asia/Jakarta, with a UTC+7 fallback in case the phone formats dates differently.
+  - `lib/finance/net-worth.ts`: the web Accounts page's net worth and per-class subtotals.
+- **Add transaction** (`src/app/add.tsx`, opened by +): Expense / Income / Transfer; amount first with the keyboard up and `rb` / `jt` buttons, plus a live "Rp 45.000" preview; accounts as one-tap chips (the last used account is remembered per user on the phone); category list grouped like the web, with search; refund checkbox; Today / Yesterday / other day, time defaulting to now (cleared for other days, like the web); description; Save in the header and at the bottom. A transfer inserts both rows in one `insert([...])`.
+- **Accounts tab**: net worth with cash / investments / debts, accounts grouped by class with subtotals and balances, archived accounts folded away, pull to refresh, empty state that links to the web.
+- **Data**: `lib/data/queries.ts` (ported reads), a small cache (`lib/data/cache.ts`) so screens show the last data right away and refresh when they come into view. Accounts and categories are preloaded when the tabs open. The cache is cleared on logout.
+- New packages (all in Expo Go): `@react-native-community/datetimepicker`, `expo-crypto` (UUID for `transfer_id`; the phone's JS engine has no `crypto.randomUUID`), `vitest` (dev).
+- Checks: typecheck, lint and tests pass; Android bundle builds. End-to-end in a browser with a fake Supabase: the expense and transfer rows sent to the database matched the expected rows, and the remembered account, validation errors and net worth total were checked. Not yet tested on a phone or against the real database.
+
+### Decisions
+- Vitest instead of Jest: the web uses Vitest, and these tests cover plain TypeScript only. If we test React Native components later, add `jest-expo` for those.
+- Money shorthand lives in a mobile file, not in the copied `money.ts`, so the copy stays identical to the web. Consider moving `parseAmountInput` to the web too.
+- Amount field uses the number keyboard (fast); the letters come from the `rb` / `jt` buttons.
+- Category picker is a full-screen list with search rather than a dropdown (long lists are easier to scroll on a phone).
+
+### Next
+1. Owner: phone checklist from this session's PR.
+2. Transactions tab: month list grouped by day, search, account filter, edit and delete (deleting a transfer deletes both rows). Editing reuses the Add sheet.
+3. Home: month totals (cashflow `totals`), top budgets (port `budgets.ts`), bills due (port `recurring.ts`), last 5 transactions.
+4. App icon and splash with the Tora logo.
+
+### Open questions
+- Hermes (the phone's JavaScript engine) formats numbers and dates with Android's own rules. Check on the phone that amounts read `Rp 1.250.000` and `US$100,00`. If not, we add a small fallback.
+- Should "Open Tora on the web" open `/dashboard` (current) or specific pages? (from session 1)
+- Font: Geist like the web, or the system font? (from session 1)
+
 ## Session 1 (2026-11-03): app skeleton, theme, login
 
 ### Done
