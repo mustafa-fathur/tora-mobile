@@ -4,8 +4,11 @@
 import { router } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { ArrowLeftRight, Ellipsis, House, Plus, Wallet, type LucideIcon } from 'lucide-react-native';
+import { useEffect } from 'react';
 import { Pressable, View, type ColorValue } from 'react-native';
 
+import { load } from '@/lib/data/cache';
+import { DATA } from '@/lib/data/keys';
 import { COLORS } from '@/lib/theme';
 
 function tabIcon(Icon: LucideIcon) {
@@ -15,6 +18,12 @@ function tabIcon(Icon: LucideIcon) {
 }
 
 export default function TabsLayout() {
+  // Load accounts and categories in the background so the + sheet opens with them ready.
+  useEffect(() => {
+    load(...DATA.accounts).catch(() => {});
+    load(...DATA.categories).catch(() => {});
+  }, []);
+
   return (
     <Tabs
       screenOptions={{

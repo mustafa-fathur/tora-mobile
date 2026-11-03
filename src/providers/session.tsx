@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, use, useEffect, useState, type PropsWithChildren } from 'react';
 
+import { clearCache } from '@/lib/data/cache';
 import { supabase } from '@/lib/supabase/client';
 
 type SessionState = {
@@ -34,7 +35,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
       setIsLoading(false);
     });
     // Fires on login, logout, token refresh and after the 2FA code is accepted.
-    const { data } = supabase.auth.onAuthStateChange((_event, next) => setSession(next));
+    const { data } = supabase.auth.onAuthStateChange((event, next) => {
+      // Don't show one person's cached data to the next person who logs in.
+      if (event === 'SIGNED_OUT') clearCache();
+      setSession(next);
+    });
     return () => data.subscription.unsubscribe();
   }, []);
 
