@@ -42,6 +42,7 @@ export type TransactionFilters = {
   end: string; // exclusive
   accountId?: string;
   q?: string; // matches description or notes
+  limit?: number; // default 1000
 };
 
 /** Transactions matching the filters, newest first (at most 1000, like the web). */
@@ -59,7 +60,7 @@ export async function getTransactions(f: TransactionFilters): Promise<Transactio
     const term = f.q.replace(/[%_,()]/g, ' ').trim();
     if (term) query = query.or(`description.ilike.%${term}%,notes.ilike.%${term}%`);
   }
-  const { data, error } = await query.limit(1000);
+  const { data, error } = await query.limit(f.limit ?? 1000);
   if (error) throw error;
   return data;
 }
@@ -76,4 +77,54 @@ export async function getTransactionWithPartner(id: string): Promise<{ row: Tran
     .eq('transfer_id', row.transfer_id);
   if (legsError) throw legsError;
   return { row, partner: legs.find((l) => l.id !== row.id) };
+}
+
+// The Supabase API returns at most 1000 rows per request; this pages through all of them.
+async function fetchAll<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>,
+): Promise<T[]> {
+  const size = 1000;
+  const out: T[] = [];
+  for (let from = 0; ; from += size) {
+    const { data, error } = await page(from, from + size - 1);
+    if (error) throw error;
+    out.push(...(data ?? []));
+    if (!data || data.length < size) return out;
+  }
+}
+
+/** Light rows for totals (every row, no cap). `end` is exclusive. */
+export function getTransactionsBetween(start: string, end: string) {
+  return fetchAll((from, to) =>
+    supabase
+      .from('transactions')
+      .select('id, account_id, amount, date, kind, category_id, description')
+      .gte('date', start)
+      .lt('date', end)
+      .order('date')
+      .order('id')
+      .range(from, to),
+  );
+}
+
+/** Budget per category for a month ("YYYY-MM"), in IDR. */
+export async function getBudgets(month: string): Promise<Map<string, number>> {
+  const { data, error } = await supabase.from('budgets').select('category_id, amount').eq('month', `${month}-01`);
+  if (error) throw error;
+  return new Map(data.map((b) => [b.category_id, Number(b.amount)]));
+}
+
+export async function getRecurringItems() {
+  const { data, error } = await supabase
+    .from('recurring_items')
+    .select('*')
+    .order('is_active', { ascending: false })
+    .order('next_due_date');
+  if (error) throw error;
+  return data;
+}
+
+/** The newest transactions, any month. */
+export function getRecentTransactions(limit: number) {
+  return getTransactions({ start: '1900-01-01', end: '9999-12-31', limit });
 }
