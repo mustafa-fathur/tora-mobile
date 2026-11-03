@@ -1,0 +1,64 @@
+// Root layout: wraps every screen. Expo Router turns each file in src/app into a screen;
+// `_layout.tsx` files decide how those screens are arranged (stack, tabs, …).
+// https://docs.expo.dev/router/basics/core-concepts/
+import '../../global.css';
+
+import { PortalHost } from '@rn-primitives/portal';
+import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+
+import { NAV_THEME } from '@/lib/theme';
+import { SessionProvider, useSession } from '@/providers/session';
+
+// Keep the splash screen up until we know whether you're logged in.
+SplashScreen.preventAutoHideAsync();
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider value={NAV_THEME}>
+      <SessionProvider>
+        <SplashScreenController />
+        <RootNavigator />
+        <StatusBar style="dark" />
+        {/* Where pop-overs and menus from React Native Reusables render. Keep it last. */}
+        <PortalHost />
+      </SessionProvider>
+    </ThemeProvider>
+  );
+}
+
+function SplashScreenController() {
+  const { isLoading } = useSession();
+  if (!isLoading) SplashScreen.hide();
+  return null;
+}
+
+// "Protected" screens only exist while their guard is true; when a guard flips
+// (you log in, enter the code, or log out) the router moves you to a screen you may see.
+// https://docs.expo.dev/router/advanced/protected/
+function RootNavigator() {
+  const { isLoading, session, needsTwoFactor } = useSession();
+  const signedIn = !!session && !needsTwoFactor;
+
+  // The splash screen covers this. Waiting means the first screen is already the right
+  // one, instead of flashing the login screen and redirecting.
+  if (isLoading) return null;
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={signedIn}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="add"
+          options={{ presentation: 'modal', headerShown: true, title: 'Add transaction' }}
+        />
+      </Stack.Protected>
+      <Stack.Protected guard={!session}>
+        <Stack.Screen name="login" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!session && needsTwoFactor}>
+        <Stack.Screen name="two-factor" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
