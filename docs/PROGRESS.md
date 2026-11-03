@@ -1,5 +1,36 @@
 # Progress
 
+## Session 4 (2026-11-04): Home
+
+### Done
+- **Copied from the web** (`dea6031`): `finance/budgets.ts` with the budgets part of the web's finance tests.
+- **Home tab** (`src/app/(tabs)/index.tsx`), following the web's dashboard and `overview.ts`:
+  - **This month**: income / spending / net in IDR. Like the web, it counts rows dated from the 1st up to today (future-dated rows wait); transfers and balance updates don't count; refunds lower spending. A note appears if a currency has no exchange rate.
+  - **Budgets**: the 3 expense groups with a budget and the highest % used, with progress bars: green, amber from 80%, red when over. A group's own budget wins over its categories' budgets, as on the web.
+  - **Coming up**: active recurring items due in the next 7 days (bills negative, income green), plus overdue ones flagged in red. Labels read "Overdue", "Today", "Tomorrow" or the date.
+  - **Recent transactions**: the last 5 (any month). Tapping one edits it; tapping a balance update offers delete.
+  - Pull to refresh. Every key is `home:…` or a shared one, so any add/edit/delete refreshes Home.
+  - A welcome state when there are no accounts.
+- `lib/finance/home.ts` (pure, tested): `homeTotals`, `topBudgets`, `comingUp`.
+- `components/transactions/open-transaction.ts`: the shared "tap a row" behaviour (Transactions + Home).
+- New reads in `lib/data/queries.ts`: `getTransactionsBetween` (pages past 1000 rows), `getBudgets`, `getRecurringItems`, `getRecentTransactions`.
+- **AGENTS.md**: added the NativeWind rule (no conditional shadow/ring/transform/animation/transition/container classes) to "Working in this repo".
+- Checks: typecheck, lint, 81 tests and the Android bundle all pass. Browser end-to-end check with a fake Supabase:
+  - Month totals exclude the future-dated row and the balance update.
+  - The over-budget group is red, and the group budget beats its category budgets.
+  - Overdue / today / within-7-days items show; the 9-days-out and inactive ones don't.
+  - Editing a recent transaction from Home saves, and Home reloads all its data.
+
+### Next
+1. Owner: phone checklist from this session's PR.
+2. v1 is feature-complete after this. Next: the app icon and splash with the Tora logo, then a release APK (see AGENTS.md "Release").
+3. Parking lot (after the 2-week use period): charts (Victory Native), editing budgets/accounts.
+
+### Open questions
+- **Future-dated transactions show at the top of "Recent transactions"** (same as the web dashboard, which sorts by date). Should "recent" stop at today on both?
+- Fix the web's transfer-edit description bug (from session 3)?
+- Hermes number formatting, "Open Tora on the web" target, and font: still open from sessions 1–2.
+
 ## Session 3 (2026-11-03): Transactions tab, edit and delete
 
 ### Done
