@@ -2,12 +2,16 @@
 // src/app/(app)/dashboard/page.tsx @ dea6031:
 // - This month counts rows dated from the 1st up to today (future-dated rows wait).
 // - Budgets: expense groups with a budget, highest % used first.
+// - Recent transactions stop at today (mobile choice; the web's dashboard doesn't yet).
 // - Coming up: active recurring items due from today to `days` ahead, plus overdue
 //   ones (next due date already passed).
 import { budgetLines } from '@/lib/finance/budgets';
 import { type CashflowContext, spendingByCategory, totals, type TxLike } from '@/lib/finance/cashflow';
 import { addDays, occurrences, type Frequency } from '@/lib/finance/recurring';
 import type { CategoryGroup } from '@/lib/finance/types';
+
+/** Exclusive end date for "Recent transactions": rows dated after today don't count yet. */
+export const recentEnd = (today: string) => addDays(today, 1);
 
 /** This month's rows up to today, and their income / spending / net in IDR. */
 export function homeTotals<T extends TxLike>(rows: T[], today: string, ctx: CashflowContext) {
