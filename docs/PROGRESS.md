@@ -1,5 +1,31 @@
 # Progress
 
+## Session 5 (2026-11-04): release prep
+
+### Done
+- **Home → Recent transactions stops at today**: future-dated rows aren't "recent" yet (`recentEnd` in `lib/finance/home.ts`, tested). **Note:** the web's dashboard on `master` (`dea6031`) still includes future-dated rows; that change wasn't in the public repo yet.
+- **App identity** (`app.json`): name **Tora**, package `com.mustafafathur.tora`, version `1.0.0`, versionCode `1`, `primaryColor` `#115C3B` (Android's `colorPrimary`, used in the recent-apps screen).
+- **Icon and splash**, generated from `assets/brand/tora-logo.png` by `scripts/make-app-icons.py` (Pillow):
+  - `icon.png`: logo on white.
+  - Adaptive icon: the logo as foreground, kept inside Android's safe zone so a circle mask doesn't clip the ears; white background colour; monochrome layer for Android 13+ themed icons. The old background image was removed.
+  - Splash: the logo on white through the `expo-splash-screen` config plugin.
+- **`expo-system-ui`** added, so `userInterfaceStyle: light` also applies on Android (prebuild warned without it).
+- **Release signing** without committing keys: `plugins/with-release-signing.js` (a config plugin, since `android/` is generated) adds a `release` signing config that reads `TORA_UPLOAD_*` from `~/.gradle/gradle.properties`. Release builds use it, and a release build stops with a clear error if those details are missing (no silent debug-signed APK). Unit tested (`tests/unit/release-signing.test.ts`). The generated `build.gradle` was checked with Groovy's parser.
+- `.gitignore` also blocks `*.keystore`, `*.pkcs12`, `*.pfx` and `gradle.properties`.
+- `package.json` scripts `android`/`ios` are now `expo start -a` / `-i` (same commands): `expo prebuild` rewrites the long forms to `expo run:*` every time.
+- **`docs/RELEASE.md`**: step-by-step PowerShell commands for a signed release APK on Windows with Android Studio (no EAS): one-time setup (JAVA_HOME/ANDROID_HOME, upload key, gradle.properties, long paths), then every release (prebuild, `gradlew assembleRelease`, copy, verify, install), plus troubleshooting.
+- Checks: typecheck, lint, 87 tests, Android JS bundle; prebuild verified offline: colorPrimary, white splash and icon background, adaptive icon with monochrome layer, signing block. **Not run here:** a full Gradle APK build (no Android SDK in the cloud sandbox), so the first real build happens on your PC.
+
+### Next
+1. Owner: build the APK with `docs/RELEASE.md`, install it, run the PR checklist.
+2. A sharper icon: the logo source is 512 px and gets upscaled to 1024. Drop a 1024 px+ export in `assets/brand/tora-logo.png` and run `python scripts/make-app-icons.py`.
+3. Two weeks of daily use, then pick from the parking lot (charts, editing budgets/accounts).
+
+### Open questions
+- Should the web's dashboard also stop "recent" at today (it doesn't on `master` yet)?
+- Fix the web's transfer-edit description bug (from session 3)?
+- Hermes number formatting, "Open Tora on the web" target, and font: still open from sessions 1–2.
+
 ## Session 4 (2026-11-04): Home
 
 ### Done
