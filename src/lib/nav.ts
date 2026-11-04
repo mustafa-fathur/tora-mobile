@@ -45,12 +45,7 @@ export const PROFILE_GROUPS: { label?: string; items: NavItem[] }[] = [
         icon: 'goals',
         soon: { round: 4, summary: 'Savings goals and how close you are.' },
       },
-      {
-        title: 'Recurring',
-        href: '/recurring',
-        icon: 'recurring',
-        soon: { round: 4, summary: 'Bills and income that repeat, with their next due dates.' },
-      },
+      { title: 'Recurring', href: '/recurring', icon: 'recurring' },
       {
         title: 'Reports',
         href: '/reports',

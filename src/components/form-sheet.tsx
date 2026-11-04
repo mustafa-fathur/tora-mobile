@@ -1,9 +1,10 @@
 // Shared pieces for full-screen form sheets (quick Add, accounts, budgets, …):
 // a top bar with close / title / Save, a scrolling body, and simple fields.
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { useRef } from 'react';
-import { Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
+import { Platform, Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Chip } from '@/components/add/chip';
@@ -12,6 +13,7 @@ import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
+import { formatDay } from '@/lib/finance/dates';
 import { haptics } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
 
@@ -172,5 +174,53 @@ export function CheckRow({
         {hint ? <Text className="text-sm text-muted-foreground">{hint}</Text> : null}
       </View>
     </Pressable>
+  );
+}
+
+/** A date (YYYY-MM-DD) chosen with Android's date picker; optional ones can be cleared. */
+export function DateField({
+  label,
+  value,
+  onChange,
+  optional = false,
+  placeholder = 'Pick a date',
+}: {
+  label: string;
+  value: string | null;
+  onChange: (v: string | null) => void;
+  optional?: boolean;
+  placeholder?: string;
+}) {
+  function pick() {
+    const [y, m, d] = (value ?? new Date().toISOString().slice(0, 10)).split('-').map(Number);
+    if (Platform.OS !== 'android') return;
+    DateTimePickerAndroid.open({
+      value: new Date(y, m - 1, d),
+      mode: 'date',
+      onChange: (event, picked) => {
+        if (event.type !== 'set' || !picked) return;
+        const pad = (n: number) => String(n).padStart(2, '0');
+        onChange(`${picked.getFullYear()}-${pad(picked.getMonth() + 1)}-${pad(picked.getDate())}`);
+      },
+    });
+  }
+  return (
+    <View className="gap-2">
+      <Label>{label}</Label>
+      <View className="flex-row items-center gap-2">
+        <Pressable
+          onPress={pick}
+          accessibilityRole="button"
+          accessibilityLabel={`${label}: ${value ? formatDay(value) : placeholder}`}
+          className="h-11 flex-1 justify-center rounded-md border border-input bg-background px-3 active:bg-accent">
+          <Text className={cn(!value && 'text-muted-foreground')}>{value ? formatDay(value) : placeholder}</Text>
+        </Pressable>
+        {optional && value ? (
+          <Pressable onPress={() => onChange(null)} hitSlop={8} accessibilityRole="button" accessibilityLabel={`Clear ${label}`} className="h-11 w-11 items-center justify-center">
+            <Icon as={X} size={18} className="text-muted-foreground" />
+          </Pressable>
+        ) : null}
+      </View>
+    </View>
   );
 }

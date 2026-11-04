@@ -12,7 +12,7 @@ import { NAV_THEME } from '@/lib/theme';
 import { SessionProvider, useSession } from '@/providers/session';
 
 // Full-screen form sheets (files in src/app/forms/).
-const FORM_SCREENS = ['forms/account', 'forms/balance', 'forms/budget'];
+const FORM_SCREENS = ['forms/account', 'forms/balance', 'forms/budget', 'forms/recurring', 'forms/paid'];
 
 // Keep the splash screen up until we know whether you're logged in.
 SplashScreen.preventAutoHideAsync();
