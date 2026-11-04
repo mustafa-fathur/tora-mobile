@@ -41,12 +41,7 @@ export const PROFILE_GROUPS: { label?: string; items: NavItem[] }[] = [
       { title: 'Budgets', href: '/budgets', icon: 'budgets' },
       { title: 'Goals', href: '/goals', icon: 'goals' },
       { title: 'Recurring', href: '/recurring', icon: 'recurring' },
-      {
-        title: 'Reports',
-        href: '/reports',
-        icon: 'reports',
-        soon: { round: 3, summary: 'Month-by-month summaries and trends.' },
-      },
+      { title: 'Reports', href: '/reports', icon: 'reports' },
     ],
   },
   {

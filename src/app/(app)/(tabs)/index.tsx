@@ -29,9 +29,7 @@ import { budgetLines } from '@/lib/finance/budgets';
 import { toCategoryGroups } from '@/lib/finance/categories';
 import { byGroup, makeContext, spendingByCategory } from '@/lib/finance/cashflow';
 import { formatDay, formatMonth, monthRange, shiftMonth } from '@/lib/finance/dates';
-import { toBase } from '@/lib/finance/fx';
-import { comingUp, homeTotals } from '@/lib/finance/home';
-import { insights } from '@/lib/finance/insights';
+import { comingUp, homeTotals, overviewInsights } from '@/lib/finance/home';
 import { netWorthSummary } from '@/lib/finance/net-worth';
 import {
   hasHistory,
@@ -49,7 +47,6 @@ import { COLORS } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
 const UPCOMING_DAYS = 7;
-const INSIGHT_BILL_DAYS = 14; // same horizon as the web's insights
 const shortDay = (date: string) => formatDay(date).slice(0, -5); // "Fri, 6 Nov"
 const RANGE_TEXT: Record<NetWorthRange, string> = {
   '1M': 'in the last month',
@@ -112,9 +109,6 @@ export default function HomeScreen() {
 
   // --- Numbers (same rules as the web's dashboard and overview) ---
   const t = homeTotals(rows.data, today, ctx);
-  const day = Number(today.slice(8, 10));
-  const lastMonth = rows.data.filter((r) => r.date.startsWith(prevMonth));
-  const lastMonthSamePeriod = lastMonth.filter((r) => Number(r.date.slice(8, 10)) <= day);
   const groups = toCategoryGroups(categories.data!);
   const lines = budgetLines(groups, budgets.data, spendingByCategory(t.thisMonth, ctx));
   const topLines = lines
@@ -122,21 +116,15 @@ export default function HomeScreen() {
     .sort((a, b) => (b.total.ratio ?? 0) - (a.total.ratio ?? 0))
     .slice(0, 3);
   const currencyOf = new Map(accounts.data!.map((a) => [a.id, a.currency]));
-  const billsSoon = comingUp(recurring.data, today, INSIGHT_BILL_DAYS).filter((u) => Number(u.item.amount) < 0);
-  const tips = insights({
+  const tips = overviewInsights({
+    rows: rows.data,
+    today,
     ctx,
-    thisMonth: t.thisMonth,
-    lastMonthSamePeriod,
-    lastMonth,
-    overBudget: lines
-      .filter((l) => l.total.status === 'over')
-      .map((l) => ({ name: l.group.name, over: -(l.total.remaining ?? 0) })),
-    upcomingBills: {
-      total: billsSoon.reduce((s, u) => s - (toBase(Number(u.item.amount), currencyOf.get(u.item.account_id) ?? 'IDR', rates.data!) ?? 0), 0),
-      count: billsSoon.length,
-      days: INSIGHT_BILL_DAYS,
-    },
-    uncategorized: t.thisMonth.filter((r) => r.kind === 'regular' && !r.category_id).length,
+    groups,
+    budgets: budgets.data,
+    recurring: recurring.data,
+    rates: rates.data!,
+    currencyOf,
   });
   const shares = topShares(byGroup(t.thisMonth, ctx, 'expense'));
   const upcoming = comingUp(recurring.data, today, UPCOMING_DAYS);

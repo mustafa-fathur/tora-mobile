@@ -35,7 +35,7 @@ export function CategoryBars({
   items: CategoryTotal[];
   total: number;
   tone: 'expense' | 'income';
-  onPress: (item: CategoryTotal) => void;
+  onPress?: (item: CategoryTotal) => void; // rows are tappable only when given
 }) {
   const max = Math.max(...items.map((i) => i.amount), 1);
   const color = tone === 'income' ? COLORS.income : COLORS.expense;
@@ -45,9 +45,10 @@ export function CategoryBars({
         <View key={item.id}>
           {i > 0 && <RowSeparator />}
           <Pressable
-            onPress={() => onPress(item)}
-            accessibilityRole="button"
-            accessibilityHint="Opens these transactions"
+            onPress={onPress ? () => onPress(item) : undefined}
+            disabled={!onPress}
+            accessibilityRole={onPress ? 'button' : 'text'}
+            accessibilityHint={onPress ? 'Opens these transactions' : undefined}
             className="gap-2 bg-background px-4 py-3 active:bg-muted">
             <View className="flex-row items-center gap-2">
               <Text className="flex-1" numberOfLines={1}>
@@ -55,7 +56,7 @@ export function CategoryBars({
               </Text>
               <Text className="text-sm text-muted-foreground">{total > 0 ? `${Math.round((item.amount / total) * 100)}%` : ''}</Text>
               <Text className="font-medium">{formatMoney(item.amount)}</Text>
-              <Icon as={ChevronRight} size={16} className="text-muted-foreground" />
+              {onPress ? <Icon as={ChevronRight} size={16} className="text-muted-foreground" /> : null}
             </View>
             <Bar ratio={item.amount / max} color={color} delay={i * 40} />
           </Pressable>
