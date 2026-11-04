@@ -43,7 +43,7 @@ export default function HomeScreen() {
   });
   const budgets = useCachedData(`home:budgets:${month}`, () => getBudgets(month));
   const recurring = useCachedData('home:recurring', getRecurringItems);
-  const recent = useCachedData('home:recent', () => getRecentTransactions(5));
+  const recent = useCachedData(`home:recent:${today}`, () => getRecentTransactions(5, today));
 
   const all = [accounts, categories, rates, monthRows, budgets, recurring, recent];
   const refreshing = all.some((d) => d.refreshing);

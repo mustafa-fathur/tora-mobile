@@ -12,7 +12,12 @@ expo-env.d.ts
 # Native
 .kotlin/
 *.orig.*
+# Signing keys and their passwords: never commit (see docs/RELEASE.md)
 *.jks
+*.keystore
+*.pkcs12
+*.pfx
+gradle.properties
 *.p8
 *.p12
 *.key

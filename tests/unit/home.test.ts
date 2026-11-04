@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { makeContext, type TxLike } from '@/lib/finance/cashflow';
-import { comingUp, homeTotals, topBudgets } from '@/lib/finance/home';
+import { comingUp, homeTotals, recentEnd, topBudgets } from '@/lib/finance/home';
 import type { Category, CategoryGroup } from '@/lib/finance/types';
 
 const cat = (id: string, name: string, kind: 'expense' | 'income', parent_id: string | null = null): Category => ({
@@ -88,5 +88,13 @@ describe('comingUp', () => {
   it('repeats weekly items within the window', () => {
     const list = comingUp([item({ frequency: 'weekly', next_due_date: '2026-11-03' })], '2026-11-03');
     expect(list.map((u) => u.date)).toEqual(['2026-11-03', '2026-11-10']);
+  });
+});
+
+describe('recentEnd', () => {
+  it('ends "recent" after today (exclusive), across month and year ends', () => {
+    expect(recentEnd('2026-11-04')).toBe('2026-11-05');
+    expect(recentEnd('2026-11-30')).toBe('2026-12-01');
+    expect(recentEnd('2026-12-31')).toBe('2027-01-01');
   });
 });

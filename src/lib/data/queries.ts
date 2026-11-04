@@ -1,6 +1,7 @@
 // Reads from Supabase. Ported from tora web: src/lib/data/queries.ts @ dea6031
 // (getAccounts, getCategories, getRateMap). RLS limits every query to the signed-in user.
 import type { Rates } from '@/lib/finance/fx';
+import { recentEnd } from '@/lib/finance/home';
 import type { Account, Category, Transaction } from '@/lib/finance/types';
 import { supabase } from '@/lib/supabase/client';
 
@@ -124,7 +125,7 @@ export async function getRecurringItems() {
   return data;
 }
 
-/** The newest transactions, any month. */
-export function getRecentTransactions(limit: number) {
-  return getTransactions({ start: '1900-01-01', end: '9999-12-31', limit });
+/** The newest transactions up to `today` (YYYY-MM-DD); future-dated rows aren't "recent" yet. */
+export function getRecentTransactions(limit: number, today: string) {
+  return getTransactions({ start: '1900-01-01', end: recentEnd(today), limit });
 }
