@@ -30,9 +30,15 @@ The owner tried the drawer version and felt it looked like a website in a webvie
   - `lib/finance/calendar-view.ts`: `monthCells`, `dueBetween`.
   - `lib/nav.ts` rewritten (tabs + Profile groups); the test still checks every entry has a screen file.
 - New package: `expo-haptics` (in Expo Go). Removed: the drawer and the Calendar/Budgets tabs (Budgets is now a Profile screen).
-- Checks: typecheck, lint, 115 tests and the Android bundle all pass. Browser check with a fake Supabase, with no errors:
+- Checks: typecheck, lint, 117 tests and the Android bundle all pass. Browser check with a fake Supabase, with no errors:
   - Home, the four Transactions views, a calendar tap → Day, Profile → Accounts → back, a coming-soon screen, and the raised + → Add.
   - Swipe can't be tested in the browser.
+
+### Fixed after the phone check
+- **Bottom bar under the phone's navigation buttons** (3-button navigation). I had set `tabBarStyle.height: undefined`. That removes the bar's computed height (49dp + the bottom safe-area inset), and on Android the layout engine then collapses the bar's `flex: 1` row to 0, so the tabs slide into the inset under ◁ ◯ ☰. Browsers size it differently, so the preview looked fine.
+  - The override is removed.
+  - `tests/unit/tab-bar.test.ts` fails if a height (or `position: 'absolute'`) comes back.
+  - Checked in the browser with 48px of fake bottom inset injected into the app: the tabs end right above it.
 
 ### Decisions
 - Screens opened from Profile show a **back arrow instead of the logo** on the left (spec: logo on every screen). Native apps put "back" there, and Android's back button also works. Flagged in the PR as a question.
