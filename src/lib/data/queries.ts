@@ -147,3 +147,16 @@ export function getBalanceMovements(until: string) {
       .range(from, to),
   );
 }
+
+export async function getAccountTypes() {
+  const { data, error } = await supabase.from('account_types').select('*').order('sort_order').order('name');
+  if (error) throw error;
+  return data;
+}
+
+/** Currencies, IDR first (like the web). */
+export async function getCurrencies() {
+  const { data, error } = await supabase.from('currencies').select('*').order('code');
+  if (error) throw error;
+  return [...data].sort((a, b) => (a.code === 'IDR' ? -1 : b.code === 'IDR' ? 1 : 0));
+}

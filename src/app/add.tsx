@@ -3,10 +3,9 @@
 // opens with the keyboard up on the amount and everything else pre-filled
 // (last account, today, now).
 import { router, useLocalSearchParams } from 'expo-router';
-import { Trash2, X } from 'lucide-react-native';
+import { Trash2 } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AccountChips } from '@/components/add/account-chips';
 import { CategoryField } from '@/components/add/category-picker';
@@ -15,6 +14,7 @@ import { DateTimeField } from '@/components/add/date-time-field';
 import { ModeSwitch } from '@/components/add/mode-switch';
 import { FormAlert } from '@/components/form-alert';
 import { ListSkeleton } from '@/components/list';
+import { SheetHeader } from '@/components/form-sheet';
 import { LoadError } from '@/components/screen-state';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
@@ -347,31 +347,6 @@ function TransactionForm({
           </Button>
         )}
       </ScrollView>
-    </View>
-  );
-}
-
-/** The sheet's own top bar: close (✕), title, and an action such as Save. */
-function SheetHeader({ title, right }: { title: string; right?: React.ReactNode }) {
-  const insets = useSafeAreaInsets();
-  return (
-    <View className="border-b border-border bg-background" style={{ paddingTop: insets.top }}>
-      <View className="h-14 flex-row items-center px-2">
-        <View className="w-20 flex-row">
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-            className="h-10 w-10 items-center justify-center rounded-full active:bg-muted">
-            <Icon as={X} size={22} />
-          </Pressable>
-        </View>
-        <Text className="flex-1 text-center text-[17px] font-semibold" accessibilityRole="header">
-          {title}
-        </Text>
-        <View className="w-20 flex-row justify-end">{right}</View>
-      </View>
     </View>
   );
 }

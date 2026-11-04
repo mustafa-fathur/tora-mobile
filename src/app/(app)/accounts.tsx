@@ -1,11 +1,13 @@
 // Accounts (opened from Profile): net worth, then accounts by class with their
-// balances. Read-only for now; adding and editing accounts is round 2 (AGENTS.md).
-import { ChevronDown, ChevronRight } from 'lucide-react-native';
+// balances. + in the header adds an account; tapping one edits it (forms/account).
+import { ChevronDown, ChevronRight, Plus } from 'lucide-react-native';
+import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, RefreshControl, SectionList, View } from 'react-native';
 
 import { AccountRow } from '@/components/accounts/account-row';
 import { ListSkeleton, RowSeparator } from '@/components/list';
+import { HeaderAction } from '@/components/nav/header-buttons';
 import { LoadError } from '@/components/screen-state';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -16,6 +18,16 @@ import type { Account } from '@/lib/finance/types';
 import { formatMoney } from '@/lib/money';
 import { COLORS } from '@/lib/theme';
 import { cn } from '@/lib/utils';
+
+function NewAccountAction() {
+  return (
+    <Stack.Screen
+      options={{
+        headerRight: () => <HeaderAction icon={Plus} label="New account" onPress={() => router.push('/forms/account')} />,
+      }}
+    />
+  );
+}
 
 export default function AccountsScreen() {
   const accounts = useCachedData(...DATA.accounts);
@@ -30,15 +42,21 @@ export default function AccountsScreen() {
 
   if (!accounts.data || !rates.data) {
     const error = accounts.error ?? rates.error;
-    return error ? <LoadError message={error} onRetry={refresh} /> : <ListSkeleton />;
+    return (
+      <>
+        <NewAccountAction />
+        {error ? <LoadError message={error} onRetry={refresh} /> : <ListSkeleton />}
+      </>
+    );
   }
 
   if (accounts.data.length === 0) {
     return (
       <View className="flex-1 items-center justify-center gap-2 bg-background p-8">
+        <NewAccountAction />
         <Text className="text-lg font-medium">No accounts yet</Text>
         <Text className="text-center text-muted-foreground">
-          Your bank accounts, e-wallets and cash will show up here.
+          Tap + to add where your money lives: a bank account, an e-wallet or your cash.
         </Text>
       </View>
     );
@@ -53,6 +71,8 @@ export default function AccountsScreen() {
   ];
 
   return (
+    <>
+    <NewAccountAction />
     <SectionList
       className="flex-1 bg-muted"
       sections={sections}
@@ -99,11 +119,18 @@ export default function AccountsScreen() {
       renderItem={({ item, index }) => (
         <View className="bg-background">
           {index > 0 && <RowSeparator />}
-          <AccountRow account={item} />
+          <Pressable
+            onPress={() => router.push({ pathname: '/forms/account', params: { id: item.id } })}
+            accessibilityRole="button"
+            accessibilityHint="Edit, update balance, archive or delete"
+            className="active:bg-muted">
+            <AccountRow account={item} />
+          </Pressable>
         </View>
       )}
       ListFooterComponent={<View className="h-10" />}
     />
+    </>
   );
 }
 
