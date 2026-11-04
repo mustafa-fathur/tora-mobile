@@ -21,7 +21,7 @@ export function openTransaction(t: Transaction, rows: Transaction[]) {
 function confirmDeleteAdjustment(t: Transaction) {
   Alert.alert(
     'Delete this balance update?',
-    'Balance updates can’t be edited. Delete it and update the balance again from Accounts on the web if needed.',
+    'Balance updates can’t be edited. Delete it and update the balance again from Accounts if needed.',
     [
       { text: 'Cancel', style: 'cancel' },
       {
