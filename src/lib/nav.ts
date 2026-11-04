@@ -52,18 +52,8 @@ export const PROFILE_GROUPS: { label?: string; items: NavItem[] }[] = [
   {
     label: 'Settings',
     items: [
-      {
-        title: 'Categories',
-        href: '/settings/categories',
-        icon: 'categories',
-        soon: { round: 5, summary: 'Add, rename, group and archive categories.' },
-      },
-      {
-        title: 'Account types',
-        href: '/settings/account-types',
-        icon: 'account-types',
-        soon: { round: 5, summary: 'The kinds of accounts you use, and whether they hold money or debt.' },
-      },
+      { title: 'Categories', href: '/settings/categories', icon: 'categories' },
+      { title: 'Account types', href: '/settings/account-types', icon: 'account-types' },
       {
         title: 'Exchange rates',
         href: '/settings/exchange-rates',
