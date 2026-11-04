@@ -1,6 +1,52 @@
 # Progress
 
-## Session 6 (2026-11-04): new scope, round 1: navigation
+## Session 7 (2026-11-04): round 1 redone, native navigation (replaces the drawer)
+The owner tried the drawer version and felt it looked like a website in a webview. Round 1 is redone on the same branch / PR #6, and AGENTS.md's navigation spec now describes this layout. The feature rounds (2–6) are kept, placed under it.
+
+### Done
+- **Header on every screen** (`components/nav/app-header.tsx`):
+  - The Tora logo on the left (a back arrow on screens opened from Profile), the title centered, and that screen's own action on the right.
+  - Only Transactions has one so far (+ add transaction); the other actions arrive with their rounds.
+  - No drawer, no hamburger.
+- **Bottom bar:** Home · Transactions · **raised +** (`tab-bar-add-button.tsx`, opens quick Add from any tab, with a haptic tap) · Cash flow · Profile.
+- **Transactions = List / Day / Week / Month** (segmented control):
+  - **List:** month switcher, search, account filter.
+  - **Day:** ◀ ▶ and Today, totals, a "Due" section for recurring items due that day.
+  - **Week:** Mon–Sun, every day with its total, "No transactions" for empty days.
+  - **Month:** a calendar grid with each day's income (green) and spending (−), a coral tint scaled to the month's biggest spending day, dots for recurring bills (coral) and income (green) due today or later, and today circled in green. Tapping a day opens Day; **Android back returns to Month**.
+  - All lists are full width, with sticky day headers.
+- **Profile:** the Tora logo as avatar, the email, then grouped rows (Accounts, Budgets, Goals, Recurring, Reports; Settings: Categories, Account types, Exchange rates, Security), Log out (with confirmation) and the version. Rows open full screens with a back arrow; unbuilt ones show "Coming soon" ("Soon" on the row).
+- **Accounts** moved to Profile → Accounts as a full-width list: net worth header, sticky class sections with subtotals, archived folded.
+- **Home:** full-width grouped sections instead of cards: a big net figure, budgets with bars, coming up, recent transactions. "See all" opens the in-app screens.
+- **Native feel:**
+  - **Swipe left** on any transaction row for Edit / Delete (balance updates: Delete only), using `ReanimatedSwipeable`; `GestureHandlerRootView` is at the root.
+  - **Haptics** (`lib/haptics.ts`, `expo-haptics`) on +, tabs, segments, rows, swipe, save (success) and delete (warning).
+  - **Skeleton loading** (`ListSkeleton`, Reusables' Skeleton) instead of spinners.
+  - Pull to refresh everywhere; safe areas handled by the header.
+- **Quick Add** slides up full screen with its own ✕ / title / Save bar. Not a native bottom sheet: it's a long form that opens the keyboard at once, and Android form sheets can't show a header. Short forms in later rounds will use `formSheet`.
+- **No web mentions:** removed the CSV link and every "on the web" text. Forgot password still opens the reset page, without saying "web".
+- **New pure helpers with tests:**
+  - `lib/compact.ts`: `compactIdr`, "45 rb" / "1,3 jt" without Intl. A test checks it matches the web's `formatCompact`, since the phone's JS engine may lack Intl compact notation.
+  - `lib/finance/calendar-view.ts`: `monthCells`, `dueBetween`.
+  - `lib/nav.ts` rewritten (tabs + Profile groups); the test still checks every entry has a screen file.
+- New package: `expo-haptics` (in Expo Go). Removed: the drawer and the Calendar/Budgets tabs (Budgets is now a Profile screen).
+- Checks: typecheck, lint, 115 tests and the Android bundle all pass. Browser check with a fake Supabase, with no errors:
+  - Home, the four Transactions views, a calendar tap → Day, Profile → Accounts → back, a coming-soon screen, and the raised + → Add.
+  - Swipe can't be tested in the browser.
+
+### Decisions
+- Screens opened from Profile show a **back arrow instead of the logo** on the left (spec: logo on every screen). Native apps put "back" there, and Android's back button also works. Flagged in the PR as a question.
+- Accounts' "new account" header action waits for round 2 (no dead buttons).
+
+### Next
+1. Owner: phone checklist in PR #6.
+2. Round 2: accounts management (new account in a bottom sheet from the header action, edit, archive, delete, update balance) + the net worth chart.
+
+### Open questions
+- Logo or back arrow on pushed screens (see Decisions)?
+- Should password reset move into the app (round 5)?
+
+## Session 6 (2026-11-04): new scope, round 1: navigation (drawer, replaced in session 7)
 
 ### Scope change
 The owner wants **full parity with the web app on the phone, except CSV import/export**. AGENTS.md (Tora section → "Scope") now says so, with six rounds:
