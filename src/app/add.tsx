@@ -2,10 +2,11 @@
 // the Transactions tab (`/add?id=…`, edit). Adding is the most-used screen, so it
 // opens with the keyboard up on the amount and everything else pre-filled
 // (last account, today, now).
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ExternalLink, Trash2 } from 'lucide-react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Trash2, X } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AccountChips } from '@/components/add/account-chips';
 import { CategoryField } from '@/components/add/category-picker';
@@ -13,7 +14,8 @@ import { Chip } from '@/components/add/chip';
 import { DateTimeField } from '@/components/add/date-time-field';
 import { ModeSwitch } from '@/components/add/mode-switch';
 import { FormAlert } from '@/components/form-alert';
-import { Loading, LoadError } from '@/components/screen-state';
+import { ListSkeleton } from '@/components/list';
+import { LoadError } from '@/components/screen-state';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
@@ -30,10 +32,10 @@ import { jakartaNow } from '@/lib/finance/now';
 import { formFromTransaction, transferLegs, type FormValues } from '@/lib/finance/transaction-list';
 import type { Mode } from '@/lib/finance/transaction-rows';
 import type { Account, Category, Transaction } from '@/lib/finance/types';
+import { haptics } from '@/lib/haptics';
 import { formatMoney } from '@/lib/money';
 import { getLastAccountId, setLastAccountId } from '@/lib/preferences';
 import { cn } from '@/lib/utils';
-import { openWeb } from '@/lib/web';
 import { useSession } from '@/providers/session';
 
 export default function TransactionSheet() {
@@ -48,20 +50,24 @@ export default function TransactionSheet() {
       accounts.refresh();
       categories.refresh();
     };
-    return error ? <LoadError message={error} onRetry={retry} /> : <Loading />;
+    return (
+      <View className="flex-1 bg-background">
+        <SheetHeader title={id ? 'Edit transaction' : 'Add transaction'} />
+        {error ? <LoadError message={error} onRetry={retry} /> : <ListSkeleton rows={5} header={false} />}
+      </View>
+    );
   }
 
   const active = accounts.data.filter((a) => !a.is_archived);
   if (!id && active.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-background p-6">
-        <Text className="text-center text-muted-foreground">
-          Add an account first on the web, so Tora knows where the money comes from.
-        </Text>
-        <Button onPress={() => openWeb('/accounts')}>
-          <Icon as={ExternalLink} size={16} />
-          <Text>Open Accounts on the web</Text>
-        </Button>
+      <View className="flex-1 bg-background">
+        <SheetHeader title="Add transaction" />
+        <View className="flex-1 items-center justify-center p-6">
+          <Text className="text-center text-muted-foreground">
+            Add an account first (Profile → Accounts), so Tora knows where the money comes from.
+          </Text>
+        </View>
       </View>
     );
   }
@@ -95,7 +101,7 @@ function useEditing(id: string | undefined) {
   if (found === null) return { loading: false, error: 'This transaction no longer exists.', value: undefined };
   if (found.row.kind === 'transfer') {
     const legs = transferLegs(found.row, found.partner);
-    if (!legs) return { loading: false, error: "This transfer is missing its other side. Fix it on the web.", value: undefined };
+    if (!legs) return { loading: false, error: "This transfer is missing its other side, so it can't be edited. You can delete it from the list.", value: undefined };
     return { loading: false, value: legs as Editing };
   }
   return { loading: false, value: { row: found.row } as Editing };
@@ -181,6 +187,7 @@ function TransactionForm({
     setSaving(false);
     if (message) return showError(message);
     if (!editing) setLastAccountId(userId, accountId);
+    haptics.success();
     router.back();
   }
 
@@ -201,6 +208,7 @@ function TransactionForm({
             const message = await deleteTransaction(row);
             setSaving(false);
             if (message) return showError(message);
+            haptics.success();
             router.back();
           },
         },
@@ -209,19 +217,15 @@ function TransactionForm({
   }
 
   return (
-    <>
-      {/* Title and a Save button in this screen's header, always reachable above the keyboard. */}
-      <Stack.Screen
-        options={{
-          title: editing ? 'Edit transaction' : 'Add transaction',
-          headerRight: () => (
-            <Pressable onPress={save} disabled={saving} hitSlop={8} accessibilityRole="button">
-              <Text className={cn('font-semibold text-primary', saving && 'opacity-50')}>
-                {saving ? 'Saving…' : 'Save'}
-              </Text>
-            </Pressable>
-          ),
-        }}
+    <View className="flex-1 bg-background">
+      {/* Close, title and Save at the top, always reachable above the keyboard. */}
+      <SheetHeader
+        title={editing ? 'Edit transaction' : 'Add transaction'}
+        right={
+          <Pressable onPress={save} disabled={saving} hitSlop={8} accessibilityRole="button" className="px-2 py-1">
+            <Text className={cn('font-semibold text-primary', saving && 'opacity-50')}>{saving ? 'Saving…' : 'Save'}</Text>
+          </Pressable>
+        }
       />
       <ScrollView
         ref={scrollRef}
@@ -343,6 +347,31 @@ function TransactionForm({
           </Button>
         )}
       </ScrollView>
-    </>
+    </View>
+  );
+}
+
+/** The sheet's own top bar: close (✕), title, and an action such as Save. */
+function SheetHeader({ title, right }: { title: string; right?: React.ReactNode }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View className="border-b border-border bg-background" style={{ paddingTop: insets.top }}>
+      <View className="h-14 flex-row items-center px-2">
+        <View className="w-20 flex-row">
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            className="h-10 w-10 items-center justify-center rounded-full active:bg-muted">
+            <Icon as={X} size={22} />
+          </Pressable>
+        </View>
+        <Text className="flex-1 text-center text-[17px] font-semibold" accessibilityRole="header">
+          {title}
+        </Text>
+        <View className="w-20 flex-row justify-end">{right}</View>
+      </View>
+    </View>
   );
 }

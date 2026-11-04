@@ -6,6 +6,7 @@ import '../../global.css';
 import { PortalHost } from '@rn-primitives/portal';
 import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { NAV_THEME } from '@/lib/theme';
 import { SessionProvider, useSession } from '@/providers/session';
@@ -15,15 +16,18 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   return (
-    <ThemeProvider value={NAV_THEME}>
-      <SessionProvider>
-        <SplashScreenController />
-        <RootNavigator />
-        <StatusBar style="dark" />
-        {/* Where pop-overs and menus from React Native Reusables render. Keep it last. */}
-        <PortalHost />
-      </SessionProvider>
-    </ThemeProvider>
+    // GestureHandlerRootView lets rows react to swipes (edit / delete).
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={NAV_THEME}>
+        <SessionProvider>
+          <SplashScreenController />
+          <RootNavigator />
+          <StatusBar style="dark" />
+          {/* Where pop-overs and menus from React Native Reusables render. Keep it last. */}
+          <PortalHost />
+        </SessionProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -47,11 +51,9 @@ function RootNavigator() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="add"
-          options={{ presentation: 'modal', headerShown: true, title: 'Add transaction' }}
-        />
+        <Stack.Screen name="(app)" />
+        {/* Quick Add slides up over everything; it draws its own header (close, title, save). */}
+        <Stack.Screen name="add" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" />

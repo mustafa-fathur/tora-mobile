@@ -1,5 +1,109 @@
 # Progress
 
+## Session 7 (2026-11-04): round 1 redone, native navigation (replaces the drawer)
+The owner tried the drawer version and felt it looked like a website in a webview. Round 1 is redone on the same branch / PR #6, and AGENTS.md's navigation spec now describes this layout. The feature rounds (2–6) are kept, placed under it.
+
+### Done
+- **Header on every screen** (`components/nav/app-header.tsx`):
+  - The Tora logo on the left (a back arrow on screens opened from Profile), the title centered, and that screen's own action on the right.
+  - Only Transactions has one so far (+ add transaction); the other actions arrive with their rounds.
+  - No drawer, no hamburger.
+- **Bottom bar:** Home · Transactions · **raised +** (`tab-bar-add-button.tsx`, opens quick Add from any tab, with a haptic tap) · Cash flow · Profile.
+- **Transactions = List / Day / Week / Month** (segmented control):
+  - **List:** month switcher, search, account filter.
+  - **Day:** ◀ ▶ and Today, totals, a "Due" section for recurring items due that day.
+  - **Week:** Mon–Sun, every day with its total, "No transactions" for empty days.
+  - **Month:** a calendar grid with each day's income (green) and spending (−), a coral tint scaled to the month's biggest spending day, dots for recurring bills (coral) and income (green) due today or later, and today circled in green. Tapping a day opens Day; **Android back returns to Month**.
+  - All lists are full width, with sticky day headers.
+- **Profile:** the Tora logo as avatar, the email, then grouped rows (Accounts, Budgets, Goals, Recurring, Reports; Settings: Categories, Account types, Exchange rates, Security), Log out (with confirmation) and the version. Rows open full screens with a back arrow; unbuilt ones show "Coming soon" ("Soon" on the row).
+- **Accounts** moved to Profile → Accounts as a full-width list: net worth header, sticky class sections with subtotals, archived folded.
+- **Home:** full-width grouped sections instead of cards: a big net figure, budgets with bars, coming up, recent transactions. "See all" opens the in-app screens.
+- **Native feel:**
+  - **Swipe left** on any transaction row for Edit / Delete (balance updates: Delete only), using `ReanimatedSwipeable`; `GestureHandlerRootView` is at the root.
+  - **Haptics** (`lib/haptics.ts`, `expo-haptics`) on +, tabs, segments, rows, swipe, save (success) and delete (warning).
+  - **Skeleton loading** (`ListSkeleton`, Reusables' Skeleton) instead of spinners.
+  - Pull to refresh everywhere; safe areas handled by the header.
+- **Quick Add** slides up full screen with its own ✕ / title / Save bar. Not a native bottom sheet: it's a long form that opens the keyboard at once, and Android form sheets can't show a header. Short forms in later rounds will use `formSheet`.
+- **No web mentions:** removed the CSV link and every "on the web" text. Forgot password still opens the reset page, without saying "web".
+- **New pure helpers with tests:**
+  - `lib/compact.ts`: `compactIdr`, "45 rb" / "1,3 jt" without Intl. A test checks it matches the web's `formatCompact`, since the phone's JS engine may lack Intl compact notation.
+  - `lib/finance/calendar-view.ts`: `monthCells`, `dueBetween`.
+  - `lib/nav.ts` rewritten (tabs + Profile groups); the test still checks every entry has a screen file.
+- New package: `expo-haptics` (in Expo Go). Removed: the drawer and the Calendar/Budgets tabs (Budgets is now a Profile screen).
+- Checks: typecheck, lint, 117 tests and the Android bundle all pass. Browser check with a fake Supabase, with no errors:
+  - Home, the four Transactions views, a calendar tap → Day, Profile → Accounts → back, a coming-soon screen, and the raised + → Add.
+  - Swipe can't be tested in the browser.
+
+### Fixed after the phone check
+- **Bottom bar under the phone's navigation buttons** (3-button navigation). I had set `tabBarStyle.height: undefined`. That removes the bar's computed height (49dp + the bottom safe-area inset), and on Android the layout engine then collapses the bar's `flex: 1` row to 0, so the tabs slide into the inset under ◁ ◯ ☰. Browsers size it differently, so the preview looked fine.
+  - The override is removed.
+  - `tests/unit/tab-bar.test.ts` fails if a height (or `position: 'absolute'`) comes back.
+  - Checked in the browser with 48px of fake bottom inset injected into the app: the tabs end right above it.
+
+### Decisions
+- Screens opened from Profile show a **back arrow instead of the logo** on the left (spec: logo on every screen). Native apps put "back" there, and Android's back button also works. Flagged in the PR as a question.
+- Accounts' "new account" header action waits for round 2 (no dead buttons).
+
+### Next
+1. Owner: phone checklist in PR #6.
+2. Round 2: accounts management (new account in a bottom sheet from the header action, edit, archive, delete, update balance) + the net worth chart.
+
+### Open questions
+- Logo or back arrow on pushed screens (see Decisions)?
+- Should password reset move into the app (round 5)?
+
+## Session 6 (2026-11-04): new scope, round 1: navigation (drawer, replaced in session 7)
+
+### Scope change
+The owner wants **full parity with the web app on the phone, except CSV import/export**. AGENTS.md (Tora section → "Scope") now says so, with six rounds:
+1. Navigation
+2. Accounts management + net worth chart
+3. Budgets, cash flow, reports
+4. Recurring, goals, calendar
+5. Settings (categories, account types, exchange rates, 2FA)
+6. Release APK
+
+Every write must follow the matching web server action (`src/app/(app)/*/actions.ts`), with its validation ported as pure, tested functions.
+
+### Done (round 1)
+- **Drawer** (`src/app/(app)/_layout.tsx`, `components/nav/drawer-content.tsx`):
+  - Opened by ☰ in the header or a swipe from the left edge.
+  - Lists every section in the web's sidebar groups (Overview, Money, Planning, Insights) plus Settings (Categories, Account types, Exchange rates, Security).
+  - Highlights the current section and marks unbuilt ones "Soon".
+  - Footer: "CSV import & export" (opens the web, the one allowed web link), the signed-in email, Log out, app version.
+- **Bottom tabs**: Home, Transactions, Calendar, Budgets, Accounts (`src/app/(app)/(tabs)/`). The More tab and the center + tab are gone (More's contents moved to the drawer footer).
+- **Header**: ☰ on the left and a green **+** (Add transaction) on the right of every tab screen. Drawer-only screens have ☰.
+- **Coming-soon screens** for Calendar, Budgets, Recurring, Goals, Cash flow, Reports and the four Settings pages. Each shows the section's icon, one line on what it will do, and "Coming soon" (`components/coming-soon.tsx`).
+- **One nav map** (`lib/nav.ts`, plain data) drives the drawer. `tests/unit/nav.test.ts` checks the groups match the web's, the five tabs, that **every entry has a screen file**, and which item is highlighted.
+- **Removed every "open on the web" card and link** except CSV and Forgot password:
+  - Home's "On the web" links now go to the in-app Budgets / Recurring screens.
+  - Empty states say adding accounts is coming.
+  - Missing-rate notes point to Settings → Exchange rates.
+- Home's "Recent transactions" already stopped at today (shipped in PR #5). **The web's `master` (`dea6031`) still doesn't do this**; the change isn't in the public repo yet.
+- New package: `react-native-gesture-handler` (needed by the drawer; in Expo Go).
+- Checks: typecheck, lint, 103 tests and the Android bundle all pass. Browser check with a fake Supabase:
+  - Drawer → Recurring opens its coming-soon screen.
+  - Drawer → Accounts switches to that tab.
+  - The Budgets tab works.
+  - Header + opens the Add sheet.
+  - No errors.
+
+### Decisions
+- Forgot password still opens the web's `/forgot-password`. The reset email links back to the web; doing it in the app would need deep links (`tora://`) and a reset screen. That could be part of round 5 (Security).
+- Drawer around tabs (tabs nested inside the drawer), so ☰ works from every tab and the drawer can open sections that aren't tabs.
+
+### Next
+1. Owner: phone checklist from this PR.
+2. **Round 2: accounts management + net worth chart.**
+   - Port the web's `accounts/actions.ts` (add, edit, archive, delete, update balance) as pure validation with tests.
+   - Account forms.
+   - Net worth over time with Victory Native (port `networth.ts`).
+
+### Open questions
+- Should password reset move into the app (round 5)?
+- Should the web's dashboard also stop "recent" at today (still not on its `master`)?
+- Fix the web's transfer-edit description bug (from session 3)?
+
 ## Session 5 (2026-11-04): release prep
 
 ### Done
