@@ -54,12 +54,7 @@ export const PROFILE_GROUPS: { label?: string; items: NavItem[] }[] = [
     items: [
       { title: 'Categories', href: '/settings/categories', icon: 'categories' },
       { title: 'Account types', href: '/settings/account-types', icon: 'account-types' },
-      {
-        title: 'Exchange rates',
-        href: '/settings/exchange-rates',
-        icon: 'exchange-rates',
-        soon: { round: 5, summary: 'Rates to IDR for accounts in other currencies.' },
-      },
+      { title: 'Exchange rates', href: '/settings/exchange-rates', icon: 'exchange-rates' },
       {
         title: 'Security',
         href: '/settings/security',

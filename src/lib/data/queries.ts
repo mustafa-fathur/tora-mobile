@@ -166,3 +166,10 @@ export async function getGoals() {
   if (error) throw error;
   return data;
 }
+
+/** Exchange rate rows with where they came from ("manual" or "api") and when. */
+export async function getRateRows() {
+  const { data, error } = await supabase.from('exchange_rates').select('*').order('currency');
+  if (error) throw error;
+  return data;
+}
