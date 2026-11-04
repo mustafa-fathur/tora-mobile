@@ -55,12 +55,7 @@ export const PROFILE_GROUPS: { label?: string; items: NavItem[] }[] = [
       { title: 'Categories', href: '/settings/categories', icon: 'categories' },
       { title: 'Account types', href: '/settings/account-types', icon: 'account-types' },
       { title: 'Exchange rates', href: '/settings/exchange-rates', icon: 'exchange-rates' },
-      {
-        title: 'Security',
-        href: '/settings/security',
-        icon: 'security',
-        soon: { round: 5, summary: 'Two-factor login with an authenticator app.' },
-      },
+      { title: 'Security', href: '/settings/security', icon: 'security' },
     ],
   },
 ];
