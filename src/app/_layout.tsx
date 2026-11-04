@@ -47,7 +47,7 @@ function RootNavigator() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn}>
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(app)" />
         <Stack.Screen
           name="add"
           options={{ presentation: 'modal', headerShown: true, title: 'Add transaction' }}

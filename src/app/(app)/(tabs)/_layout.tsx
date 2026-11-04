@@ -1,12 +1,13 @@
-// Bottom tabs. The center "+" isn't a real tab: its button opens the Add transaction
-// screen (src/app/add.tsx) on top of the tabs instead of switching tabs.
+// Bottom tabs for the screens used most. Every tab's header has the menu (☰) on
+// the left and Add transaction (+) on the right.
 // https://docs.expo.dev/router/advanced/tabs/
-import { router } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
-import { ArrowLeftRight, Ellipsis, House, Plus, Wallet, type LucideIcon } from 'lucide-react-native';
+import { type LucideIcon } from 'lucide-react-native';
 import { useEffect } from 'react';
-import { Pressable, View, type ColorValue } from 'react-native';
+import { type ColorValue } from 'react-native';
 
+import { HeaderAddButton, HeaderMenuButton } from '@/components/nav/header-buttons';
+import { NAV_ICONS } from '@/components/nav/nav-icons';
 import { load } from '@/lib/data/cache';
 import { DATA } from '@/lib/data/keys';
 import { COLORS } from '@/lib/theme';
@@ -31,33 +32,14 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: COLORS.mutedForeground,
         tabBarStyle: { borderTopColor: COLORS.border },
         headerTitleStyle: { fontWeight: '600' },
+        headerLeft: () => <HeaderMenuButton />,
+        headerRight: () => <HeaderAddButton />,
       }}>
-      <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: tabIcon(House) }} />
-      <Tabs.Screen
-        name="transactions"
-        options={{ title: 'Transactions', tabBarIcon: tabIcon(ArrowLeftRight) }}
-      />
-      <Tabs.Screen
-        name="new"
-        options={{ title: 'Add', tabBarButton: () => <AddButton /> }}
-      />
-      <Tabs.Screen name="accounts" options={{ title: 'Accounts', tabBarIcon: tabIcon(Wallet) }} />
-      <Tabs.Screen name="more" options={{ title: 'More', tabBarIcon: tabIcon(Ellipsis) }} />
+      <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: tabIcon(NAV_ICONS.home) }} />
+      <Tabs.Screen name="transactions" options={{ title: 'Transactions', tabBarIcon: tabIcon(NAV_ICONS.transactions) }} />
+      <Tabs.Screen name="calendar" options={{ title: 'Calendar', tabBarIcon: tabIcon(NAV_ICONS.calendar) }} />
+      <Tabs.Screen name="budgets" options={{ title: 'Budgets', tabBarIcon: tabIcon(NAV_ICONS.budgets) }} />
+      <Tabs.Screen name="accounts" options={{ title: 'Accounts', tabBarIcon: tabIcon(NAV_ICONS.accounts) }} />
     </Tabs>
-  );
-}
-
-function AddButton() {
-  return (
-    <View className="flex-1 items-center justify-center">
-      <Pressable
-        onPress={() => router.push('/add')}
-        accessibilityRole="button"
-        accessibilityLabel="Add transaction"
-        hitSlop={6}
-        className="h-12 w-12 items-center justify-center rounded-full bg-primary shadow-md shadow-black/20 active:bg-primary/90">
-        <Plus color={COLORS.primaryForeground} size={26} strokeWidth={2.5} />
-      </Pressable>
-    </View>
   );
 }

@@ -1,10 +1,9 @@
-import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react-native';
+import { ChevronDown, ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 
 import { AccountRow } from '@/components/accounts/account-row';
 import { Loading, LoadError } from '@/components/screen-state';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Separator } from '@/components/ui/separator';
@@ -15,9 +14,8 @@ import { netWorthSummary } from '@/lib/finance/net-worth';
 import { formatMoney } from '@/lib/money';
 import { COLORS } from '@/lib/theme';
 import { cn } from '@/lib/utils';
-import { openWeb } from '@/lib/web';
 
-// Read-only in v1: adding, editing and balance updates stay on the web.
+// Read-only for now: adding, editing and balance updates come in round 2 (AGENTS.md → Rounds).
 export default function AccountsScreen() {
   const accounts = useCachedData(...DATA.accounts);
   const rates = useCachedData(...DATA.rates);
@@ -39,12 +37,8 @@ export default function AccountsScreen() {
       <View className="flex-1 items-center justify-center gap-4 bg-background p-6">
         <Text className="text-lg font-medium">No accounts yet</Text>
         <Text className="text-center text-muted-foreground">
-          Add your bank accounts, e-wallets and cash on the Tora website. They&apos;ll show up here.
+          Your bank accounts, e-wallets and cash will show up here. Adding accounts in the app is coming soon.
         </Text>
-        <Button onPress={() => openWeb('/accounts')}>
-          <Icon as={ExternalLink} size={16} />
-          <Text>Open Accounts on the web</Text>
-        </Button>
       </View>
     );
   }
@@ -71,7 +65,7 @@ export default function AccountsScreen() {
         </View>
         {s.missing.length > 0 && (
           <Text className="text-xs text-muted-foreground">
-            Not counted: no exchange rate for {s.missing.join(', ')}. Add one in Settings on the web.
+            Not counted: no exchange rate for {s.missing.join(', ')}. Add one in Settings → Exchange rates.
           </Text>
         )}
       </Card>

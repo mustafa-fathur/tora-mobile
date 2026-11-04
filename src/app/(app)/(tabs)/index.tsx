@@ -1,5 +1,4 @@
 import { router } from 'expo-router';
-import { ExternalLink } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
 
@@ -8,8 +7,6 @@ import { HomeSection } from '@/components/home/section';
 import { Loading, LoadError } from '@/components/screen-state';
 import { openTransaction } from '@/components/transactions/open-transaction';
 import { TransactionRow } from '@/components/transactions/transaction-row';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { useCachedData } from '@/lib/data/cache';
@@ -24,7 +21,6 @@ import { describeRow } from '@/lib/finance/transaction-list';
 import { formatMoney } from '@/lib/money';
 import { COLORS } from '@/lib/theme';
 import { cn } from '@/lib/utils';
-import { openWeb } from '@/lib/web';
 
 const UPCOMING_DAYS = 7;
 const shortDay = (date: string) => formatDay(date).slice(0, -5); // "Fri, 6 Nov"
@@ -64,12 +60,9 @@ export default function HomeScreen() {
       <View className="flex-1 items-center justify-center gap-4 bg-background p-6">
         <Text className="text-lg font-medium">Welcome to Tora 🐯</Text>
         <Text className="text-center text-muted-foreground">
-          Start by adding where your money lives (a bank account, an e-wallet or your cash) on the Tora website.
+          Start by adding where your money lives: a bank account, an e-wallet or your cash. Adding accounts in
+          the app is coming soon.
         </Text>
-        <Button onPress={() => openWeb('/accounts')}>
-          <Icon as={ExternalLink} size={16} />
-          <Text>Open Accounts on the web</Text>
-        </Button>
       </View>
     );
   }
@@ -102,15 +95,16 @@ export default function HomeScreen() {
         </View>
         {missingRates.length > 0 && (
           <Text className="text-xs text-muted-foreground">
-            {missingRates.join(', ')} amounts aren&apos;t included yet: add exchange rates in Settings on the web.
+            {missingRates.join(', ')} amounts aren&apos;t included yet: add exchange rates in Settings → Exchange
+            rates.
           </Text>
         )}
       </HomeSection>
 
       {/* Budgets */}
-      <HomeSection title="Budgets" action="On the web" onAction={() => openWeb('/budgets')}>
+      <HomeSection title="Budgets" action="See all" onAction={() => router.navigate('/budgets')}>
         {lines.length === 0 ? (
-          <Text className="text-sm text-muted-foreground">No budgets this month. Set them up on the web.</Text>
+          <Text className="text-sm text-muted-foreground">No budgets this month.</Text>
         ) : (
           lines.map((l) => (
             <View key={l.group.id} className="gap-1.5">
@@ -130,7 +124,7 @@ export default function HomeScreen() {
       </HomeSection>
 
       {/* Coming up */}
-      <HomeSection title="Coming up" action="On the web" onAction={() => openWeb('/recurring')}>
+      <HomeSection title="Coming up" action="See all" onAction={() => router.navigate('/recurring')}>
         {upcoming.length === 0 ? (
           <Text className="text-sm text-muted-foreground">Nothing due in the next {UPCOMING_DAYS} days.</Text>
         ) : (

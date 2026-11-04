@@ -3,7 +3,7 @@
 // opens with the keyboard up on the amount and everything else pre-filled
 // (last account, today, now).
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ExternalLink, Trash2 } from 'lucide-react-native';
+import { Trash2 } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
 
@@ -33,7 +33,6 @@ import type { Account, Category, Transaction } from '@/lib/finance/types';
 import { formatMoney } from '@/lib/money';
 import { getLastAccountId, setLastAccountId } from '@/lib/preferences';
 import { cn } from '@/lib/utils';
-import { openWeb } from '@/lib/web';
 import { useSession } from '@/providers/session';
 
 export default function TransactionSheet() {
@@ -56,12 +55,9 @@ export default function TransactionSheet() {
     return (
       <View className="flex-1 items-center justify-center gap-4 bg-background p-6">
         <Text className="text-center text-muted-foreground">
-          Add an account first on the web, so Tora knows where the money comes from.
+          Add an account first, so Tora knows where the money comes from. Adding accounts in the app is coming
+          soon.
         </Text>
-        <Button onPress={() => openWeb('/accounts')}>
-          <Icon as={ExternalLink} size={16} />
-          <Text>Open Accounts on the web</Text>
-        </Button>
       </View>
     );
   }
@@ -95,7 +91,7 @@ function useEditing(id: string | undefined) {
   if (found === null) return { loading: false, error: 'This transaction no longer exists.', value: undefined };
   if (found.row.kind === 'transfer') {
     const legs = transferLegs(found.row, found.partner);
-    if (!legs) return { loading: false, error: "This transfer is missing its other side. Fix it on the web.", value: undefined };
+    if (!legs) return { loading: false, error: "This transfer is missing its other side, so it can't be edited. You can delete it from the list.", value: undefined };
     return { loading: false, value: legs as Editing };
   }
   return { loading: false, value: { row: found.row } as Editing };
