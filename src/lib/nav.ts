@@ -29,12 +29,7 @@ export type NavItem = {
 export const TABS: NavItem[] = [
   { title: 'Home', href: '/', icon: 'home' },
   { title: 'Transactions', href: '/transactions', icon: 'transactions' },
-  {
-    title: 'Cash flow',
-    href: '/cash-flow',
-    icon: 'cash-flow',
-    soon: { round: 3, summary: 'Income versus spending by month and by category.' },
-  },
+  { title: 'Cash flow', href: '/cash-flow', icon: 'cash-flow' },
   { title: 'Profile', href: '/profile', icon: 'profile' },
 ];
 

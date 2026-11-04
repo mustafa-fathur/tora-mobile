@@ -15,7 +15,8 @@ import { getTransactions } from '@/lib/data/queries';
 import { type CashflowContext, totals } from '@/lib/finance/cashflow';
 import { formatMonth, monthRange, shiftMonth } from '@/lib/finance/dates';
 import { dayGroups } from '@/lib/finance/transaction-list';
-import type { Account } from '@/lib/finance/types';
+import { categoryFilter, categoryName } from '@/lib/finance/categories';
+import type { Account, Category } from '@/lib/finance/types';
 
 /** A month of transactions, newest first, with search and an account filter. */
 export function ListView({
@@ -23,13 +24,20 @@ export function ListView({
   onMonth,
   thisMonth,
   accounts,
+  categories,
   ctx,
+  category,
+  onClearCategory,
 }: {
   month: string;
   onMonth: (m: string) => void;
   thisMonth: string;
   accounts: Account[];
+  categories: Category[];
   ctx: CashflowContext;
+  /** A category or group id (or "uncategorized") from Cash flow / Home. */
+  category?: string;
+  onClearCategory: () => void;
 }) {
   const [accountId, setAccountId] = useState<string>();
   const [typed, setTyped] = useState('');
@@ -41,8 +49,8 @@ export function ListView({
     return () => clearTimeout(timer);
   }, [typed]);
 
-  const transactions = useCachedData(`transactions:${month}:${accountId ?? ''}:${q}`, () =>
-    getTransactions({ ...monthRange(month), accountId, q }),
+  const transactions = useCachedData(`transactions:${month}:${accountId ?? ''}:${category ?? ''}:${q}`, () =>
+    getTransactions({ ...monthRange(month), accountId, q, ...categoryFilter(categories, category) }),
   );
 
   const controls = (
@@ -79,6 +87,16 @@ export function ListView({
         ) : null}
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-2">
+        {category ? (
+          <Pressable
+            onPress={onClearCategory}
+            accessibilityRole="button"
+            accessibilityLabel={`Remove filter ${categoryName(categories, category)}`}
+            className="h-9 flex-row items-center gap-1.5 rounded-full border border-primary bg-secondary px-3.5">
+            <Text className="text-sm font-medium text-primary">{categoryName(categories, category)}</Text>
+            <Icon as={X} size={14} className="text-primary" />
+          </Pressable>
+        ) : null}
         <Chip label="All accounts" selected={!accountId} onPress={() => setAccountId(undefined)} />
         {accounts
           .filter((a) => !a.is_archived || a.id === accountId)
@@ -121,7 +139,9 @@ export function ListView({
         onRefresh={transactions.refresh}
         header={<PeriodTotals income={sum.income} spending={sum.spending} net={sum.net} />}
         empty={
-          accountId || q ? 'No transactions match these filters this month.' : 'No transactions this month yet. Tap + to add one.'
+          accountId || q || category
+            ? 'No transactions match these filters this month.'
+            : 'No transactions this month yet. Tap + to add one.'
         }
         footer={
           rows.length >= 1000 ? (

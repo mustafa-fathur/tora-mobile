@@ -43,6 +43,8 @@ export type TransactionFilters = {
   end: string; // exclusive
   accountId?: string;
   q?: string; // matches description or notes
+  categoryIds?: string[]; // a category, or a group plus its categories
+  uncategorized?: boolean; // regular rows without a category
   limit?: number; // default 1000
 };
 
@@ -57,6 +59,9 @@ export async function getTransactions(f: TransactionFilters): Promise<Transactio
     .order('time', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false });
   if (f.accountId) query = query.eq('account_id', f.accountId);
+  // Same as the web's transactionsQuery.
+  if (f.uncategorized) query = query.is('category_id', null).eq('kind', 'regular');
+  else if (f.categoryIds?.length) query = query.in('category_id', f.categoryIds);
   if (f.q) {
     const term = f.q.replace(/[%_,()]/g, ' ').trim();
     if (term) query = query.or(`description.ilike.%${term}%,notes.ilike.%${term}%`);
@@ -128,4 +133,17 @@ export async function getRecurringItems() {
 /** The newest transactions up to `today` (YYYY-MM-DD); future-dated rows aren't "recent" yet. */
 export function getRecentTransactions(limit: number, today: string) {
   return getTransactions({ start: '1900-01-01', end: recentEnd(today), limit });
+}
+
+/** Every transaction's account, date and amount up to `until` (inclusive), for net worth over time. */
+export function getBalanceMovements(until: string) {
+  return fetchAll((from, to) =>
+    supabase
+      .from('transactions')
+      .select('account_id, date, amount')
+      .lte('date', until)
+      .order('date')
+      .order('id')
+      .range(from, to),
+  );
 }

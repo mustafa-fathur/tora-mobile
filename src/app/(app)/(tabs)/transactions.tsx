@@ -1,7 +1,7 @@
 // Transactions, four ways: List (a month, searchable), Day, Week, and Month (a
 // calendar). Tapping a day in the calendar opens it in Day; Android's back button
 // then returns to the calendar.
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { BackHandler, View } from 'react-native';
 
@@ -33,6 +33,20 @@ export default function TransactionsScreen() {
   const [date, setDate] = useState(today); // the day / week / month being shown
   const [listMonth, setListMonth] = useState(today.slice(0, 7));
   const [fromCalendar, setFromCalendar] = useState(false);
+  const [category, setCategory] = useState<string>();
+
+  // Opened from Cash flow or Home with ?month=&category=: show that month's list,
+  // filtered. (Adjusting state while rendering is React's pattern for "a prop changed".)
+  const params = useLocalSearchParams<{ month?: string; category?: string }>();
+  const incoming = params.category ? `${params.month ?? ''}|${params.category}` : undefined;
+  const [applied, setApplied] = useState<string>();
+  if (incoming && incoming !== applied) {
+    setApplied(incoming);
+    setView('list');
+    setFromCalendar(false);
+    if (params.month && /^\d{4}-\d{2}$/.test(params.month)) setListMonth(params.month);
+    setCategory(params.category);
+  }
 
   const accounts = useCachedData(...DATA.accounts);
   const categories = useCachedData(...DATA.categories);
@@ -73,7 +87,22 @@ export default function TransactionsScreen() {
       <ListSkeleton />
     );
   } else if (view === 'list') {
-    body = <ListView month={listMonth} onMonth={setListMonth} thisMonth={today.slice(0, 7)} accounts={accounts.data!} ctx={ctx} />;
+    body = (
+      <ListView
+        month={listMonth}
+        onMonth={setListMonth}
+        thisMonth={today.slice(0, 7)}
+        accounts={accounts.data!}
+        categories={categories.data!}
+        ctx={ctx}
+        category={category}
+        onClearCategory={() => {
+          setCategory(undefined);
+          setApplied(undefined);
+          router.setParams({ month: undefined, category: undefined });
+        }}
+      />
+    );
   } else if (view === 'day') {
     body = <DayView date={date} onDate={setDate} today={today} accounts={accounts.data!} ctx={ctx} recurring={recurring.data} />;
   } else if (view === 'week') {

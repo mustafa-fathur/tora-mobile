@@ -1,5 +1,51 @@
 # Progress
 
+## Session 8 (2026-11-04): charts on Home and Cash flow
+New branch from master (PR #6 merged).
+
+### Done
+- **Charts stack (Expo Go compatible):** `@shopify/react-native-skia` 2.14.0 (the version in SDK 58 and Expo Go) + **`victory-native` 42.0.1**, pinned. Victory Native 43 switched to a renamed Skia package (`react-native-skia` ≥ 2.15) that Expo Go doesn't include; 42.0.1 targets `@shopify/react-native-skia` 2.6–3 and Reanimated ≥ 3.19, which match SDK 58. **Don't upgrade victory-native past 42 until Expo ships the new Skia.**
+- **Copied from the web** (`dea6031`): `finance/networth.ts` (with its test) and `finance/insights.ts`. The web has no insights tests, so `tests/unit/insights.test.ts` covers each rule.
+- **New tested helpers:**
+  - `finance/net-worth-series.ts`: net worth at any dates, matching `netWorthHistory` at month ends; 30 points per range so the chart morphs smoothly.
+  - `idr-live.ts`: a count-up formatter that can run on the animation thread, matching `formatMoney`.
+  - `finance/shares.ts`: donut shares, top 5 + Other; savings rate.
+  - `categoryFilter`: tapping a category opens its transactions, with the same group expansion as the web.
+- **Home:**
+  - Net worth counts up (Reanimated on the UI thread), with its change over the range and a green gradient area chart; drag along it to read a day.
+  - Range chips 1M / 3M / 6M / 1Y.
+  - This month's income / spending / net.
+  - **Insights** as swipeable cards with page dots, same rules and inputs as the web's dashboard (bills over the next 14 days).
+  - **Spending by category** donut with a legend; tapping a legend line opens those transactions.
+  - **Budget rings** for the top 3 (Skia arcs that fill in).
+  - **Coming up** as a timeline with overdue items in red.
+  - Recent transactions, stopping at today.
+- **Cash flow tab** (was coming soon):
+  - 12-month income (green) / spending (coral) bars with a net line; tapping selects a month (soft green band, haptic tick).
+  - The selected month's income, spending, net and savings rate (net ÷ income, as on the web).
+  - Expense / Income toggle with bars that grow in; tapping a category opens Transactions filtered to it.
+- **Transactions** accepts `?month=&category=`: it switches to List for that month, filters (a group includes its categories; "uncategorized" works), and shows a removable chip.
+- Short amounts on charts use `compactIdr` ("1,3 jt").
+- Little data: "Your trend fills in as you add transactions" when net worth hasn't moved, an empty Cash flow message, and empty-state lines for donut / budgets / coming up.
+- Checks: typecheck, lint, 141 tests, Android bundle. Browser preview, with Skia's WebAssembly loaded by a temporary, uncommitted entry file, and 12 months of fake data:
+  - Home: hero, chart, insights, donut, rings, timeline, recent.
+  - Cash flow: bars, net line, month tap → March, Income toggle, category tap → Transactions filtered to Food in March.
+- **Fixed during the check:**
+  - Month taps used `Pressable` positions, which can be missing; they now use gesture-handler's Tap (same on Android and web), plus a guard.
+  - `matchFont` isn't available in browsers, so the axis font is optional.
+  - The area's "natural" curve overshot below real values; it's now "monotone".
+
+### Not checked here
+- **No emulator in this cloud session** (no Android SDK). Animations (count-up, morphs, rings, bars), haptics, Skia rendering on Android and 60fps all need the phone or your emulator. Axis labels only appear on the phone (system font).
+
+### Next
+1. Owner: phone/emulator checklist in this PR.
+2. Round 2: accounts management (new account in a bottom sheet, edit, archive, delete, update balance). The net worth chart is already here.
+
+### Open questions
+- Logo or back arrow on screens opened from Profile (from session 7)?
+- Should password reset move into the app (round 5)?
+
 ## Session 7 (2026-11-04): round 1 redone, native navigation (replaces the drawer)
 The owner tried the drawer version and felt it looked like a website in a webview. Round 1 is redone on the same branch / PR #6, and AGENTS.md's navigation spec now describes this layout. The feature rounds (2–6) are kept, placed under it.
 
