@@ -160,3 +160,9 @@ export async function getCurrencies() {
   if (error) throw error;
   return [...data].sort((a, b) => (a.code === 'IDR' ? -1 : b.code === 'IDR' ? 1 : 0));
 }
+
+export async function getGoals() {
+  const { data, error } = await supabase.from('goals').select('*').order('is_archived').order('created_at');
+  if (error) throw error;
+  return data;
+}
