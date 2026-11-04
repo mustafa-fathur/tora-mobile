@@ -35,7 +35,12 @@ export default function TabsLayout() {
         header: ({ options }) => <AppHeader title={options.title ?? ''} right={options.headerRight?.({ canGoBack: false })} />,
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.mutedForeground,
-        tabBarStyle: { borderTopColor: COLORS.border, height: undefined },
+        // Never set `height` here (not even undefined). The tab bar computes its height
+        // as 49dp + the space for the phone's own navigation buttons (the bottom
+        // safe-area inset). Without that fixed height, Android's layout engine collapses
+        // the bar's flex:1 row to 0 and the tabs slide under those buttons
+        // (tests/unit/tab-bar.test.ts). Browsers don't show this.
+        tabBarStyle: { borderTopColor: COLORS.border },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '500' },
       }}>
       <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: tabIcon(NAV_ICONS.home) }} />
