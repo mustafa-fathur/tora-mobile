@@ -38,59 +38,19 @@ export const PROFILE_GROUPS: { label?: string; items: NavItem[] }[] = [
   {
     items: [
       { title: 'Accounts', href: '/accounts', icon: 'accounts' },
-      {
-        title: 'Budgets',
-        href: '/budgets',
-        icon: 'budgets',
-        soon: { round: 3, summary: 'Set monthly budgets per category and see how much is left.' },
-      },
-      {
-        title: 'Goals',
-        href: '/goals',
-        icon: 'goals',
-        soon: { round: 4, summary: 'Savings goals and how close you are.' },
-      },
-      {
-        title: 'Recurring',
-        href: '/recurring',
-        icon: 'recurring',
-        soon: { round: 4, summary: 'Bills and income that repeat, with their next due dates.' },
-      },
-      {
-        title: 'Reports',
-        href: '/reports',
-        icon: 'reports',
-        soon: { round: 3, summary: 'Month-by-month summaries and trends.' },
-      },
+      { title: 'Budgets', href: '/budgets', icon: 'budgets' },
+      { title: 'Goals', href: '/goals', icon: 'goals' },
+      { title: 'Recurring', href: '/recurring', icon: 'recurring' },
+      { title: 'Reports', href: '/reports', icon: 'reports' },
     ],
   },
   {
     label: 'Settings',
     items: [
-      {
-        title: 'Categories',
-        href: '/settings/categories',
-        icon: 'categories',
-        soon: { round: 5, summary: 'Add, rename, group and archive categories.' },
-      },
-      {
-        title: 'Account types',
-        href: '/settings/account-types',
-        icon: 'account-types',
-        soon: { round: 5, summary: 'The kinds of accounts you use, and whether they hold money or debt.' },
-      },
-      {
-        title: 'Exchange rates',
-        href: '/settings/exchange-rates',
-        icon: 'exchange-rates',
-        soon: { round: 5, summary: 'Rates to IDR for accounts in other currencies.' },
-      },
-      {
-        title: 'Security',
-        href: '/settings/security',
-        icon: 'security',
-        soon: { round: 5, summary: 'Two-factor login with an authenticator app.' },
-      },
+      { title: 'Categories', href: '/settings/categories', icon: 'categories' },
+      { title: 'Account types', href: '/settings/account-types', icon: 'account-types' },
+      { title: 'Exchange rates', href: '/settings/exchange-rates', icon: 'exchange-rates' },
+      { title: 'Security', href: '/settings/security', icon: 'security' },
     ],
   },
 ];

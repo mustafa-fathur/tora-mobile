@@ -1,5 +1,36 @@
 # Progress
 
+## Session 9 (2026-11-04): finish the app (every "coming soon" replaced)
+PR #7 (charts) merged first; this work is PR #8. Each item was committed and pushed on its own.
+
+### Done (all 8 items)
+| # | Item | Rules ported from the web (pure, tested) |
+|---|---|---|
+| 1 | **Accounts management:** new (header +), edit, archive/unarchive, delete (confirm: deletes its transactions), update balance (adjustment dated today) | `accounts/actions.ts` → `finance/account-rules.ts` |
+| 2 | **Budgets:** month switcher, groups and categories, spent vs budget bars (ok / 80% / over), summary (budgeted, spent in/outside budgets, left), set or clear (empty = clear), copy last month | `budgets/actions.ts` → `finance/budget-rules.ts`; lines from the copied `budgets.ts` |
+| 3 | **Recurring:** "Due in the next 30 days" and "Later and paused"; add/edit; **mark paid** (creates the transaction with the item's sign and category, links `recurring_item_id`, advances the date); skip; pause/resume; delete. Swipe a row for Paid / Skip | `recurring/actions.ts` → `finance/recurring-rules.ts` |
+| 4 | **Goals:** progress list (manual or linked to an account; linked ones follow the balance, never below 0), "x/month to reach it by …", new/edit, add / take out money, archive, delete | `goals/actions.ts` + page → `finance/goal-rules.ts` |
+| 5 | **Settings → Categories** (expense/income, groups with emoji, add category in a group, rename, delete: rows become uncategorized) and **Account types** (by kind, rename, delete; the kind can't change while accounts use it) | `settings/actions.ts` → `finance/settings-rules.ts` |
+| 6 | **Settings → Exchange rates:** typed rates (Indonesian number style; empty removes), "Fetch today's rates" from open.er-api.com | same file |
+| 7 | **Settings → Security:** 2FA status, add an authenticator ("Open in authenticator app" `otpauth://` link, or the setup key, then the first code), remove | `security-actions.ts` → `auth/totp.ts` |
+| 8 | **Reports:** 3 / 6 / 12 months: income, spending, average/month, net worth change and history chart, insights, spending by category, month by month | page logic; insights now shared with Home (`overviewInsights` in `finance/home.ts`) |
+
+- Forms are full-screen sheets sharing `components/form-sheet.tsx` (header with ✕ / title / Save, text, choice, check and date fields). Quick Add uses the same header.
+- Amounts in every form also accept the shorthand `45rb` / `1,5jt` (the web accepts `45.000` style only).
+- `nav.ts` has no "soon" entries left; the coming-soon screen is deleted.
+- Checks: typecheck, lint, **167 tests**, Android bundle. Browser screenshot checks were **skipped to save credits**; nothing here was run on a phone or emulator.
+
+### Remains
+- **Owner:** the phone checklist in PR #8.
+- **Round 6: release APK** (`docs/RELEASE.md`).
+- Known small gaps (not in the web either, or minor):
+  - Category / account-type ordering can't be changed (new ones go last, `sort_order` 999, like the web).
+  - Archiving categories isn't offered (the web has no archive action either).
+
+### Open questions
+- Logo or back arrow on screens opened from Profile (from session 7)?
+- Should password reset move into the app?
+
 ## Session 8 (2026-11-04): charts on Home and Cash flow
 New branch from master (PR #6 merged).
 

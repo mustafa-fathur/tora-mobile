@@ -98,3 +98,21 @@ describe('recentEnd', () => {
     expect(recentEnd('2026-12-31')).toBe('2027-01-01');
   });
 });
+
+describe('overviewInsights', async () => {
+  const { overviewInsights } = await import('@/lib/finance/home');
+  it("builds the dashboard's insights from two months of rows", () => {
+    const rows = [
+      tx({ date: '2026-10-02', amount: 10000000, category_id: 'salary' }),
+      tx({ date: '2026-10-02', amount: -100000, category_id: 'groceries' }),
+      tx({ date: '2026-11-02', amount: -400000, category_id: 'groceries' }),
+    ];
+    const out = overviewInsights({
+      rows, today: '2026-11-03', ctx, groups, budgets: new Map([['food', 300000]]),
+      recurring: [], rates: {}, currencyOf: new Map([['bca', 'IDR']]),
+    }).map((i) => i.title);
+    expect(out).toContain('Spending is up 300%');
+    expect(out).toContain('Over budget: Food');
+    expect(out).toContain('You saved 99% of your income last month');
+  });
+});

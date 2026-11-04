@@ -11,6 +11,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NAV_THEME } from '@/lib/theme';
 import { SessionProvider, useSession } from '@/providers/session';
 
+// Full-screen form sheets (files in src/app/forms/).
+const FORM_SCREENS = ['forms/account', 'forms/balance', 'forms/budget', 'forms/recurring', 'forms/paid', 'forms/goal', 'forms/goal-money', 'forms/category', 'forms/account-type'];
+
 // Keep the splash screen up until we know whether you're logged in.
 SplashScreen.preventAutoHideAsync();
 
@@ -54,6 +57,10 @@ function RootNavigator() {
         <Stack.Screen name="(app)" />
         {/* Quick Add slides up over everything; it draws its own header (close, title, save). */}
         <Stack.Screen name="add" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        {/* Other forms open the same way: full-screen sheets with their own close / title / Save bar. */}
+        {FORM_SCREENS.map((name) => (
+          <Stack.Screen key={name} name={name} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        ))}
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" />
