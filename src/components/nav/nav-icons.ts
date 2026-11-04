@@ -1,6 +1,5 @@
 import {
   ArrowLeftRight,
-  CalendarDays,
   ChartColumn,
   ChartPie,
   Coins,
@@ -11,22 +10,23 @@ import {
   ShieldCheck,
   Tags,
   Target,
+  UserRound,
   Wallet,
   type LucideIcon,
 } from 'lucide-react-native';
 
 import type { NavIcon } from '@/lib/nav';
 
-// Lucide icons (generic, open source), mostly the same as the web's sidebar.
+// Lucide icons (generic, open source).
 export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   home: House,
-  calendar: CalendarDays,
-  accounts: Wallet,
   transactions: ArrowLeftRight,
-  budgets: PiggyBank,
-  recurring: Repeat,
-  goals: Target,
   'cash-flow': ChartColumn,
+  profile: UserRound,
+  accounts: Wallet,
+  budgets: PiggyBank,
+  goals: Target,
+  recurring: Repeat,
   reports: ChartPie,
   categories: Tags,
   'account-types': Layers,

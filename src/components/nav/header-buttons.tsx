@@ -1,25 +1,28 @@
 import { router } from 'expo-router';
-import { DrawerToggleButton } from 'expo-router/drawer';
-import { Plus } from 'lucide-react-native';
+import { Plus, type LucideIcon } from 'lucide-react-native';
 import { Pressable } from 'react-native';
 
-import { COLORS } from '@/lib/theme';
+import { Icon } from '@/components/ui/icon';
+import { haptics } from '@/lib/haptics';
 
-/** "+" in the header: opens the Add transaction sheet. */
-export function HeaderAddButton() {
+/** A round icon button for the right side of the header (a screen's own action). */
+export function HeaderAction({ icon, label, onPress }: { icon: LucideIcon; label: string; onPress: () => void }) {
   return (
     <Pressable
-      onPress={() => router.push('/add')}
+      onPress={() => {
+        haptics.tap();
+        onPress();
+      }}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel="Add transaction"
-      className="mr-2 h-9 w-9 items-center justify-center rounded-full bg-primary active:bg-primary/90">
-      <Plus color={COLORS.primaryForeground} size={20} strokeWidth={2.5} />
+      accessibilityLabel={label}
+      className="mr-1 h-10 w-10 items-center justify-center rounded-full active:bg-muted">
+      <Icon as={icon} size={22} className="text-primary" />
     </Pressable>
   );
 }
 
-/** Hamburger in the header: opens the drawer (the side menu with every section). */
-export function HeaderMenuButton() {
-  return <DrawerToggleButton tintColor={COLORS.foreground} accessibilityLabel="Open menu" />;
+/** Header action that opens the Add transaction sheet. */
+export function HeaderAddTransaction() {
+  return <HeaderAction icon={Plus} label="Add transaction" onPress={() => router.push('/add')} />;
 }

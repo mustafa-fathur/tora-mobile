@@ -1,30 +1,24 @@
-// The signed-in app: a drawer (side menu) around the bottom tabs and every other
-// section. A "drawer" slides in from the left via the ☰ button or a swipe from
-// the screen edge. https://docs.expo.dev/router/advanced/drawer/
-import { Drawer } from 'expo-router/drawer';
+// The signed-in app: the bottom tabs, plus the screens that Profile opens on top
+// of them (a "stack": each new screen slides in, and Android's back button or the
+// header's back arrow returns). https://docs.expo.dev/router/advanced/stack/
+import { Stack } from 'expo-router';
 
-import { DrawerContent } from '@/components/nav/drawer-content';
-import { HeaderMenuButton } from '@/components/nav/header-buttons';
-import { NAV_ITEMS } from '@/lib/nav';
-import { COLORS } from '@/lib/theme';
-
-// Everything except the tab screens, which live in (tabs) with their own headers.
-const DRAWER_SCREENS = NAV_ITEMS.filter((i) => !i.tab);
+import { AppHeader } from '@/components/nav/app-header';
+import { PROFILE_ITEMS } from '@/lib/nav';
 
 export default function AppLayout() {
   return (
-    <Drawer
-      drawerContent={(props) => <DrawerContent {...props} />}
+    <Stack
       screenOptions={{
-        headerTintColor: COLORS.foreground,
-        headerLeft: () => <HeaderMenuButton />,
-        headerTitleStyle: { fontWeight: '600' },
-        drawerStyle: { width: 300 },
+        // Screens set their own right-side action with <Stack.Screen options={{ headerRight }} />.
+        header: ({ options }) => (
+          <AppHeader title={options.title ?? ''} back right={options.headerRight?.({ canGoBack: true })} />
+        ),
       }}>
-      <Drawer.Screen name="(tabs)" options={{ headerShown: false }} />
-      {DRAWER_SCREENS.map((item) => (
-        <Drawer.Screen key={item.href} name={item.href.slice(1)} options={{ title: item.title }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      {PROFILE_ITEMS.map((item) => (
+        <Stack.Screen key={item.href} name={item.href.slice(1)} options={{ title: item.title }} />
       ))}
-    </Drawer>
+    </Stack>
   );
 }

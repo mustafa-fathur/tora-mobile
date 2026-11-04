@@ -1,21 +1,22 @@
+// Accounts (opened from Profile): net worth, then accounts by class with their
+// balances. Read-only for now; adding and editing accounts is round 2 (AGENTS.md).
 import { ChevronDown, ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { Pressable, RefreshControl, SectionList, View } from 'react-native';
 
 import { AccountRow } from '@/components/accounts/account-row';
-import { Loading, LoadError } from '@/components/screen-state';
-import { Card } from '@/components/ui/card';
+import { ListSkeleton, RowSeparator } from '@/components/list';
+import { LoadError } from '@/components/screen-state';
 import { Icon } from '@/components/ui/icon';
-import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { useCachedData } from '@/lib/data/cache';
 import { DATA } from '@/lib/data/keys';
 import { netWorthSummary } from '@/lib/finance/net-worth';
+import type { Account } from '@/lib/finance/types';
 import { formatMoney } from '@/lib/money';
 import { COLORS } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
-// Read-only for now: adding, editing and balance updates come in round 2 (AGENTS.md → Rounds).
 export default function AccountsScreen() {
   const accounts = useCachedData(...DATA.accounts);
   const rates = useCachedData(...DATA.rates);
@@ -29,92 +30,92 @@ export default function AccountsScreen() {
 
   if (!accounts.data || !rates.data) {
     const error = accounts.error ?? rates.error;
-    return error ? <LoadError message={error} onRetry={refresh} /> : <Loading />;
+    return error ? <LoadError message={error} onRetry={refresh} /> : <ListSkeleton />;
   }
 
   if (accounts.data.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-background p-6">
+      <View className="flex-1 items-center justify-center gap-2 bg-background p-8">
         <Text className="text-lg font-medium">No accounts yet</Text>
         <Text className="text-center text-muted-foreground">
-          Your bank accounts, e-wallets and cash will show up here. Adding accounts in the app is coming soon.
+          Your bank accounts, e-wallets and cash will show up here.
         </Text>
       </View>
     );
   }
 
   const s = netWorthSummary(accounts.data, rates.data);
+  const sections: { title: string; subtotal?: number; data: Account[]; archived?: boolean }[] = [
+    ...s.sections.map((x) => ({ title: x.title, subtotal: x.subtotal, data: x.items })),
+    ...(s.archived.length
+      ? [{ title: `Archived (${s.archived.length})`, archived: true, data: showArchived ? s.archived : [] }]
+      : []),
+  ];
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="gap-4 p-4"
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[COLORS.primary]} />}>
-      {/* Net worth */}
-      <Card className="gap-3 px-4 py-4">
-        <View className="gap-1">
-          <Text className="text-sm text-muted-foreground">Net worth</Text>
-          <Text className={cn('text-3xl font-semibold tracking-tight', s.netWorth < 0 && 'text-destructive')}>
-            {formatMoney(s.netWorth)}
-          </Text>
-        </View>
-        <View className="gap-1.5 rounded-md bg-muted px-3 py-2.5">
-          <Stat label="Cash & bank" value={s.cash} />
-          <Stat label="Investments" value={s.investment} />
-          <Stat label="Debts" value={s.debts} />
-        </View>
-        {s.missing.length > 0 && (
-          <Text className="text-xs text-muted-foreground">
-            Not counted: no exchange rate for {s.missing.join(', ')}. Add one in Settings → Exchange rates.
-          </Text>
-        )}
-      </Card>
-
-      {/* Accounts by class */}
-      {s.sections.map((section) => (
-        <Card key={section.value} className="gap-0 py-0">
-          <View className="flex-row items-center justify-between px-4 py-3">
-            <Text className="font-semibold">{section.title}</Text>
-            <Text className="font-semibold">{formatMoney(section.subtotal)}</Text>
+    <SectionList
+      className="flex-1 bg-muted"
+      sections={sections}
+      keyExtractor={(a) => a.id}
+      stickySectionHeadersEnabled
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[COLORS.primary]} />}
+      ListHeaderComponent={
+        <View className="gap-3 border-b border-border bg-background px-4 pb-5 pt-4">
+          <View className="gap-1">
+            <Text className="text-sm text-muted-foreground">Net worth</Text>
+            <Text className={cn('text-3xl font-semibold tracking-tight', s.netWorth < 0 && 'text-destructive')}>
+              {formatMoney(s.netWorth)}
+            </Text>
           </View>
-          {section.items.map((a) => (
-            <View key={a.id}>
-              <Separator />
-              <AccountRow account={a} />
-            </View>
-          ))}
-        </Card>
-      ))}
-
-      {s.archived.length > 0 && (
-        <Card className="gap-0 py-0">
+          <View className="flex-row">
+            <Figure label="Cash & bank" value={s.cash} />
+            <Figure label="Investments" value={s.investment} />
+            <Figure label="Debts" value={s.debts} />
+          </View>
+          {s.missing.length > 0 && (
+            <Text className="text-xs text-muted-foreground">
+              Not counted: no exchange rate for {s.missing.join(', ')}. Add one in Profile → Exchange rates.
+            </Text>
+          )}
+        </View>
+      }
+      renderSectionHeader={({ section }) =>
+        section.archived ? (
           <Pressable
             onPress={() => setShowArchived((v) => !v)}
             accessibilityRole="button"
             accessibilityState={{ expanded: showArchived }}
-            className="flex-row items-center gap-2 px-4 py-3">
+            className="flex-row items-center gap-1.5 border-b border-border bg-muted px-4 pb-2 pt-5">
             <Icon as={showArchived ? ChevronDown : ChevronRight} size={16} className="text-muted-foreground" />
-            <Text className="text-sm text-muted-foreground">Archived accounts ({s.archived.length})</Text>
+            <Text className="text-sm font-semibold text-muted-foreground">{section.title}</Text>
           </Pressable>
-          {showArchived &&
-            s.archived.map((a) => (
-              <View key={a.id}>
-                <Separator />
-                <AccountRow account={a} />
-              </View>
-            ))}
-        </Card>
+        ) : (
+          <View className="flex-row items-end justify-between border-b border-border bg-muted px-4 pb-2 pt-5">
+            <Text className="text-sm font-semibold text-muted-foreground">{section.title}</Text>
+            <Text className="text-sm font-semibold">{formatMoney(section.subtotal ?? 0)}</Text>
+          </View>
+        )
+      }
+      renderItem={({ item, index }) => (
+        <View className="bg-background">
+          {index > 0 && <RowSeparator />}
+          <AccountRow account={item} />
+        </View>
       )}
-      <View className="h-2" />
-    </ScrollView>
+      ListFooterComponent={<View className="h-10" />}
+    />
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Figure({ label, value }: { label: string; value: number }) {
   return (
-    <View className="flex-row items-center justify-between gap-3">
-      <Text className="text-sm text-muted-foreground">{label}</Text>
-      <Text className={cn('text-sm font-medium', value < 0 && 'text-destructive')}>{formatMoney(value)}</Text>
+    <View className="flex-1 gap-0.5">
+      <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+        {label}
+      </Text>
+      <Text className={cn('text-sm font-semibold', value < 0 && 'text-destructive')} numberOfLines={1} adjustsFontSizeToFit>
+        {formatMoney(value)}
+      </Text>
     </View>
   );
 }

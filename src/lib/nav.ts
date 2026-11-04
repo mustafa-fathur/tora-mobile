@@ -1,16 +1,16 @@
-// Every section of the app, in the web's sidebar groups (tora web:
-// src/components/app/nav.ts), plus Settings. Drives the drawer menu.
-// Plain data (no React Native imports) so tests can check every href has a screen.
+// Every section of the app and where it lives: the bottom bar, or a row on the
+// Profile tab that opens a full screen. Plain data (no React Native imports) so
+// tests can check each href has a screen file.
 
 export type NavIcon =
   | 'home'
-  | 'calendar'
-  | 'accounts'
   | 'transactions'
-  | 'budgets'
-  | 'recurring'
-  | 'goals'
   | 'cash-flow'
+  | 'profile'
+  | 'accounts'
+  | 'budgets'
+  | 'goals'
+  | 'recurring'
   | 'reports'
   | 'categories'
   | 'account-types'
@@ -21,50 +21,33 @@ export type NavItem = {
   title: string;
   href: string;
   icon: NavIcon;
-  /** Shown in the bottom tab bar too. */
-  tab?: boolean;
   /** Not built yet: the round it's planned for (AGENTS.md → Rounds) and what it will do. */
   soon?: { round: number; summary: string };
 };
 
-export type NavGroup = { label: string; items: NavItem[] };
+/** The bottom bar. The raised + sits between Transactions and Cash flow. */
+export const TABS: NavItem[] = [
+  { title: 'Home', href: '/', icon: 'home' },
+  { title: 'Transactions', href: '/transactions', icon: 'transactions' },
+  {
+    title: 'Cash flow',
+    href: '/cash-flow',
+    icon: 'cash-flow',
+    soon: { round: 3, summary: 'Income versus spending by month and by category.' },
+  },
+  { title: 'Profile', href: '/profile', icon: 'profile' },
+];
 
-export const NAV_GROUPS: NavGroup[] = [
+/** Rows on the Profile tab, in groups. Each opens a full screen. */
+export const PROFILE_GROUPS: { label?: string; items: NavItem[] }[] = [
   {
-    label: 'Overview',
     items: [
-      { title: 'Home', href: '/', icon: 'home', tab: true },
-      {
-        title: 'Calendar',
-        href: '/calendar',
-        icon: 'calendar',
-        tab: true,
-        soon: { round: 4, summary: 'Your transactions and upcoming bills by day, week or month.' },
-      },
-    ],
-  },
-  {
-    label: 'Money',
-    items: [
-      { title: 'Accounts', href: '/accounts', icon: 'accounts', tab: true },
-      { title: 'Transactions', href: '/transactions', icon: 'transactions', tab: true },
-    ],
-  },
-  {
-    label: 'Planning',
-    items: [
+      { title: 'Accounts', href: '/accounts', icon: 'accounts' },
       {
         title: 'Budgets',
         href: '/budgets',
         icon: 'budgets',
-        tab: true,
         soon: { round: 3, summary: 'Set monthly budgets per category and see how much is left.' },
-      },
-      {
-        title: 'Recurring',
-        href: '/recurring',
-        icon: 'recurring',
-        soon: { round: 4, summary: 'Bills and income that repeat, with their next due dates.' },
       },
       {
         title: 'Goals',
@@ -72,16 +55,11 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: 'goals',
         soon: { round: 4, summary: 'Savings goals and how close you are.' },
       },
-    ],
-  },
-  {
-    label: 'Insights',
-    items: [
       {
-        title: 'Cash flow',
-        href: '/cash-flow',
-        icon: 'cash-flow',
-        soon: { round: 3, summary: 'Income versus spending by month and by category.' },
+        title: 'Recurring',
+        href: '/recurring',
+        icon: 'recurring',
+        soon: { round: 4, summary: 'Bills and income that repeat, with their next due dates.' },
       },
       {
         title: 'Reports',
@@ -122,13 +100,8 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-export const NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
+export const PROFILE_ITEMS = PROFILE_GROUPS.flatMap((g) => g.items);
 
 export function navItem(href: string) {
-  return NAV_ITEMS.find((i) => i.href === href);
-}
-
-/** The nav item for the current path, for highlighting in the drawer. */
-export function activeNavItem(pathname: string) {
-  return NAV_ITEMS.find((i) => (i.href === '/' ? pathname === '/' : pathname === i.href || pathname.startsWith(`${i.href}/`)));
+  return [...TABS, ...PROFILE_ITEMS].find((i) => i.href === href);
 }
