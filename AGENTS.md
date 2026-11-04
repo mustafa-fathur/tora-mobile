@@ -57,25 +57,36 @@ Tora ("tiger" in Sumatra) is a **personal finance tracker** for one owner in Ind
 - Transaction kinds: `regular` (income/spending, optional category; a refund is a positive amount in an expense category), `transfer` (two rows, one per account, sharing `transfer_id`; insert both in one `insert([...])` call), `adjustment` (balance updates; not income/spending).
 - Account balance = view `account_balances`. Account types have a class (`cash`, `investment`, `liability`); debts are negative.
 - Optional `time` on transactions; default to "now" (Asia/Jakarta) for new ones.
-- **Copy, don't reinvent:** port these pure helpers from the web repo (keep a header comment `// Copied from tora web: <path> @ <commit>` so drift is visible): `src/lib/money.ts` (`formatMoney`, `parseAmount`, `formatCompact`), `src/lib/finance/{cashflow,fx,dates,recurring,budgets}.ts`, and the generated types `src/lib/supabase/database.types.ts`. Port their unit tests too.
+- **Copy, don't reinvent:** port these pure helpers from the web repo (keep a header comment `// Copied from tora web: <path> @ <commit>` so drift is visible): `src/lib/money.ts` (`formatMoney`, `parseAmount`, `formatCompact`), `src/lib/finance/*.ts` (cash flow, fx, dates, recurring, budgets, calendar, net worth, insights… as each round needs them), and the generated types `src/lib/supabase/database.types.ts`. Port their unit tests too.
 
 ## Stack (decided; ask the owner before changing or adding big dependencies)
 - Expo SDK 58 (see the Expo section above), **Expo Router**, TypeScript.
-- UI: **NativeWind** + **React Native Reusables** (shadcn-style). Charts later: **Victory Native**.
+- UI: **NativeWind** + **React Native Reusables** (shadcn-style). Charts: **Victory Native** (from round 2).
 - **Light theme only.** Tokens mirror the web (`src/app/globals.css` in the web repo): primary = logo green `#115C3B`, white background, income green, spending coral `oklch(0.68 0.13 35)`. Indonesian number style: `Rp 1.250.000`, short form `45 rb` / `1,3 jt`.
-- Inspired by Monarch Money and Budge **patterns only**: never copy their visuals, names, icons or copy.
+- Inspired by Monarch Money and Budge **patterns only** (e.g. a drawer plus tabs, a header + button): never copy their visuals, names, icons or copy. Keep Tora's own look: light theme, green, our tokens.
 
-## v1 scope: basic daily use (anything else stays on the web)
-Bottom tabs with a center **+** button:
-1. **Home:** this month's income / spending / net; top budgets (progress bars); bills due in the next 7 days; last 5 transactions.
-2. **Transactions:** current month grouped by day with day totals, month switcher, search, account filter; tap a row to edit or delete (deleting a transfer deletes both rows).
-3. **+ Add transaction** (sheet/modal, the most-used screen, must be fast): amount first (accepts `45.000`, `45rb`, `1,5jt` style input), expense / income / transfer, account (remember the last used), category, date + time, description, optional "refund".
-4. **Accounts:** net worth and accounts grouped by class with balances (read-only in v1).
-5. **More:** signed-in email, log out, "Open Tora on the web" for budgets, reports, CSV import and settings, app version.
+## Scope: full parity with the web app (except CSV)
+The phone app does **everything the web app does, except CSV import and export** (those stay on the web; it's fine to point to the web where CSV is mentioned). No other "open on the web" links or cards.
 
-**Auth:** email + password, then the 2FA code screen if needed. Forgot password opens the web `/forgot-password`. Sign-up is off (invite-only).
+**Navigation**
+- A **drawer** (hamburger in the header) lists every section in the web's sidebar groups: **Overview** (Home, Calendar), **Money** (Accounts, Transactions), **Planning** (Budgets, Recurring, Goals), **Insights** (Cash flow, Reports) and **Settings** (Categories, Account types, Exchange rates, Security), plus the signed-in email and Log out.
+- **Bottom tabs:** Home, Transactions, Calendar, Budgets, Accounts.
+- **Add transaction** is a **+** button in the header of the main screens. It opens the sheet (amount first, fast; accepts `45.000`, `45rb`, `1,5jt`).
+- Sections not built yet show a "coming soon" screen.
 
-**Out of v1** (parking lot): editing budgets/accounts/categories, reports, calendar, CSV import, goals, recurring management, offline mode, notifications, email/chat capture.
+**Rounds** (each ends with typecheck, lint and tests passing, a PR, and a phone check):
+1. **Navigation:** drawer, tabs, header +, coming-soon screens.
+2. **Accounts management + net worth chart:** add, edit, archive, delete accounts and update balances; net worth over time (Victory Native).
+3. **Budgets, cash flow, reports.**
+4. **Recurring, goals, calendar.**
+5. **Settings:** categories, account types, exchange rates, 2FA (Security).
+6. **Release APK** (see `docs/RELEASE.md`).
+
+**Writes follow the web's rules.** Every write must follow the same rules as the matching web server action in `src/app/(app)/*/actions.ts` (validation, messages, signed amounts, what gets updated). Port that validation as **pure, tested functions** (like `lib/finance/transaction-rows.ts` for `saveTransaction`), with a header naming the web file and commit. Then call Supabase directly; RLS does the authorization.
+
+**Auth:** email + password, then the 2FA code screen if needed. Forgot password opens the web `/forgot-password` (the reset email links back to the web). Sign-up is off (invite-only).
+
+**Not planned:** CSV import/export (web only), offline mode, notifications, email/chat capture.
 
 ## Working in this repo
 - The owner is new to React Native: explain native concepts briefly when they come up.
