@@ -1,5 +1,57 @@
 # Progress
 
+## Session 6 (2026-11-04): new scope, round 1: navigation
+
+### Scope change
+The owner wants **full parity with the web app on the phone, except CSV import/export**. AGENTS.md (Tora section → "Scope") now says so, with six rounds:
+1. Navigation
+2. Accounts management + net worth chart
+3. Budgets, cash flow, reports
+4. Recurring, goals, calendar
+5. Settings (categories, account types, exchange rates, 2FA)
+6. Release APK
+
+Every write must follow the matching web server action (`src/app/(app)/*/actions.ts`), with its validation ported as pure, tested functions.
+
+### Done (round 1)
+- **Drawer** (`src/app/(app)/_layout.tsx`, `components/nav/drawer-content.tsx`):
+  - Opened by ☰ in the header or a swipe from the left edge.
+  - Lists every section in the web's sidebar groups (Overview, Money, Planning, Insights) plus Settings (Categories, Account types, Exchange rates, Security).
+  - Highlights the current section and marks unbuilt ones "Soon".
+  - Footer: "CSV import & export" (opens the web, the one allowed web link), the signed-in email, Log out, app version.
+- **Bottom tabs**: Home, Transactions, Calendar, Budgets, Accounts (`src/app/(app)/(tabs)/`). The More tab and the center + tab are gone (More's contents moved to the drawer footer).
+- **Header**: ☰ on the left and a green **+** (Add transaction) on the right of every tab screen. Drawer-only screens have ☰.
+- **Coming-soon screens** for Calendar, Budgets, Recurring, Goals, Cash flow, Reports and the four Settings pages. Each shows the section's icon, one line on what it will do, and "Coming soon" (`components/coming-soon.tsx`).
+- **One nav map** (`lib/nav.ts`, plain data) drives the drawer. `tests/unit/nav.test.ts` checks the groups match the web's, the five tabs, that **every entry has a screen file**, and which item is highlighted.
+- **Removed every "open on the web" card and link** except CSV and Forgot password:
+  - Home's "On the web" links now go to the in-app Budgets / Recurring screens.
+  - Empty states say adding accounts is coming.
+  - Missing-rate notes point to Settings → Exchange rates.
+- Home's "Recent transactions" already stopped at today (shipped in PR #5). **The web's `master` (`dea6031`) still doesn't do this**; the change isn't in the public repo yet.
+- New package: `react-native-gesture-handler` (needed by the drawer; in Expo Go).
+- Checks: typecheck, lint, 103 tests and the Android bundle all pass. Browser check with a fake Supabase:
+  - Drawer → Recurring opens its coming-soon screen.
+  - Drawer → Accounts switches to that tab.
+  - The Budgets tab works.
+  - Header + opens the Add sheet.
+  - No errors.
+
+### Decisions
+- Forgot password still opens the web's `/forgot-password`. The reset email links back to the web; doing it in the app would need deep links (`tora://`) and a reset screen. That could be part of round 5 (Security).
+- Drawer around tabs (tabs nested inside the drawer), so ☰ works from every tab and the drawer can open sections that aren't tabs.
+
+### Next
+1. Owner: phone checklist from this PR.
+2. **Round 2: accounts management + net worth chart.**
+   - Port the web's `accounts/actions.ts` (add, edit, archive, delete, update balance) as pure validation with tests.
+   - Account forms.
+   - Net worth over time with Victory Native (port `networth.ts`).
+
+### Open questions
+- Should password reset move into the app (round 5)?
+- Should the web's dashboard also stop "recent" at today (still not on its `master`)?
+- Fix the web's transfer-edit description bug (from session 3)?
+
 ## Session 5 (2026-11-04): release prep
 
 ### Done
