@@ -1,5 +1,18 @@
 # Progress
 
+## Session 10 (2026-11-05): Windows release build troubleshooting
+
+### Done
+- Traced the supplied step-5 build failure to Ninja's native-build directory creation, consistent with Windows long-path limits. The log uses SDK CMake 3.22.1.
+- Updated `docs/RELEASE.md` with Expo's documented CMake 3.31.6 / Ninja 1.12.1 setup, the user-level `android.cmakeVersion` setting, Windows restart, and targeted generated-cache cleanup.
+- Typecheck passed. Unit tests could not start because the local Rolldown native binding is missing. Lint also encountered a missing Linux resolver binding and attempted an automatic install; verification is incomplete.
+
+### Next
+- Owner: apply the toolchain settings on Windows, rebuild, then continue release steps 6–8. On the phone, check launch, login/2FA, and navigation in the installed APK.
+
+### Open questions
+- The fix has not yet been confirmed by a successful Windows APK build; retain the next failure log if it persists.
+
 ## Session 9 (2026-11-04): finish the app (every "coming soon" replaced)
 PR #7 (charts) merged first; this work is PR #8. Each item was committed and pushed on its own.
 

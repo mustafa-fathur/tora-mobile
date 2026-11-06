@@ -90,7 +90,7 @@ Get-Content "$HOME\.gradle\gradle.properties"
 
 ### 4. Enable long paths (avoids a common Windows build error)
 
-React Native compiles C++ code with deep folder paths. Allow long paths in Git:
+React Native compiles C++ code with deep folder paths. Allow long paths in Git (this helps Git check out files; it does not fix the native build itself):
 
 ```powershell
 git config --global core.longpaths true
@@ -101,6 +101,48 @@ Then allow them in Windows itself. This one needs **PowerShell opened as Adminis
 ```powershell
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
 ```
+
+**Restart Windows** after changing this setting.
+
+### 5. Install CMake with a long-path-capable Ninja
+
+Enabling long paths alone is not enough. Android SDK CMake 3.22.1 bundles Ninja 1.10.2, which cannot handle these paths. Even a short project folder such as `C:\tora` can fail with `ninja: error: mkdir(...): No such file or directory`.
+
+1. In Android Studio, open **Settings → Languages & Frameworks → Android SDK → SDK Tools**.
+2. Enable **Show Package Details**, expand **CMake**, select **3.31.6**, and click **Apply**. This package includes Ninja 1.12.1.
+3. Open your personal Gradle settings:
+
+```powershell
+notepad "$HOME\.gradle\gradle.properties"
+```
+
+Keep your existing signing settings. Add this line (or update it if already present), then save:
+
+```properties
+android.cmakeVersion=3.31.6
+```
+
+Expo SDK 58 reads this setting from your Gradle user home; it survives `prebuild --clean`. Confirm the installed Ninja version:
+
+```powershell
+& "$env:ANDROID_HOME\cmake\3.31.6\bin\ninja.exe" --version
+```
+
+It should print `1.12.1`. See Expo's [Windows long-path troubleshooting](https://docs.expo.dev/troubleshooting/windows-long-paths/).
+
+If a build has already failed, clear its generated native build files before retrying. From your project's `android` folder (for example `C:\tora\android`):
+
+```powershell
+.\gradlew.bat --stop
+foreach ($buildCache in @("app\.cxx", "app\build")) {
+    if (Test-Path $buildCache) {
+        Remove-Item -Recurse -Force $buildCache
+    }
+}
+.\gradlew.bat assembleRelease -PreactNativeArchitectures=arm64-v8a
+```
+
+These two folders contain generated build files only. When the build succeeds, continue at **Every release → step 6**. If it fails again, retain the complete error and check which CMake/Ninja path it names; it should use `cmake\3.31.6`, not `cmake\3.22.1`.
 
 ---
 
@@ -207,7 +249,7 @@ The installed app is called **Tora** (package `com.mustafafathur.tora`). It's se
 | `SDK location not found` | `ANDROID_HOME` isn't set in this window: setup step 1, then open a new PowerShell. |
 | `JAVA_HOME is not set` / wrong Java version | Setup step 1 (use Android Studio's `jbr`). |
 | `Keystore was tampered with, or password was incorrect` | The password in `gradle.properties` doesn't match the key. |
-| `Filename longer than 260 characters` / CMake path errors | Setup step 4, or move the project to a shorter path such as `C:\dev\tora-mobile`. |
+| `Filename longer than 260 characters` / `ninja: error: mkdir(...)` / CMake path errors | One-time setup steps 4–5: enable Windows long paths, use CMake 3.31.6 with newer Ninja, and clear the generated build caches. A shorter project path alone may not be enough. |
 | `INSTALL_FAILED_UPDATE_INCOMPATIBLE` on the phone | The installed Tora was signed with a different key. Uninstall it, then install again. |
 | Login fails only in the APK | `.env.local` was missing or wrong when you built. Fix it, then repeat steps 4–6. |
 
